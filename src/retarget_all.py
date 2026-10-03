@@ -25,7 +25,28 @@ parser.add_argument("--dst", default="/home/sehoon/Documents/GitHub/"
 parser.add_argument("--robot", default="unitree_g1")
 parser.add_argument("--fps", type=int, default=30)
 parser.add_argument("--override", action="store_true")
+parser.add_argument("--posture", type=float, default=0.0,
+                    help="IK 에 직전 프레임 자세로 끄는 연속성 항(mink.PostureTask)을 이 가중치로 붙인다. "
+                         "261003 IGRIS-C: 어깨 pitch·yaw 가 한 프레임에 ~1.5rad 뒤집히는 프레임이 14클립 52개 → "
+                         "1.0 에서 4개. 손 추종 오차는 +4mm. 20 이상은 추종이 무뎌진다. G1 은 0 으로 그대로.")
 args = parser.parse_args()
+
+
+class GMRPosture(GMR):
+    """두 단계 IK 모두에 PostureTask 를 더한다. 목표는 그 프레임을 풀기 직전의 자세(= 직전 프레임 해)라,
+    같은 손 위치를 내는 다른 IK 해로 갈아타는 것을 막는다. 루트(자유 관절)에는 걸리지 않는다."""
+
+    def __init__(self, *a, posture, **k):
+        super().__init__(*a, **k)
+        import mink
+        self.posture = mink.PostureTask(self.model, cost=posture)
+        for tasks, errs in ((self.tasks1, self.task_errors1), (self.tasks2, self.task_errors2)):
+            tasks.append(self.posture)
+            errs[self.posture] = []
+
+    def retarget(self, human_data, **k):
+        self.posture.set_target(self.configuration.q.copy())
+        return super().retarget(human_data, **k)
 
 os.makedirs(args.dst, exist_ok=True)
 files = sorted(glob.glob(os.path.join(args.src, "*.bvh")))
@@ -42,8 +63,12 @@ for path in files:
     t0 = time.time()
     try:
         frames, human_height = load_bvh_file(path, format="lafan1")
-        retargeter = GMR(src_human="bvh_lafan1", tgt_robot=args.robot,
-                         actual_human_height=human_height)
+        if args.posture > 0:
+            retargeter = GMRPosture(src_human="bvh_lafan1", tgt_robot=args.robot,
+                                    actual_human_height=human_height, posture=args.posture)
+        else:
+            retargeter = GMR(src_human="bvh_lafan1", tgt_robot=args.robot,
+                             actual_human_height=human_height)
         # GMR 의 IK 는 직전 프레임 해에서 warm start 한다. 첫 프레임만 그게 없어
         # max_iter=10 안에 수렴하지 못하고 궤적을 벗어난 자세가 나온다
         # (motion_retarget.py:186, "curr_error - next_error > 0.001" 로 조기 종료).

@@ -104,6 +104,50 @@ The first two attempts did not learn: episode length 5 after 8,500 iterations (G
    collisions inside the body. With self-collision off, as in Isaac Lab's own G1 and H1 configs, the force
    went to 0 N and learning followed a G1-like curve.
 
+### Retargeting v2 — stopping flips and penetration inside the IK
+
+dance2 (0%) and obstacles3 (stalled training) were both reference problems, so I looked at how
+retargeting is done "properly". The GMR paper itself lists one-frame joint jumps as a known artifact
+and suggests per-motion weight tuning. Work that moved GMR to another robot
+([wheeled humanoid](https://arxiv.org/abs/2609.11357)) added damping and velocity limits to the mink IK;
+[PHUMA](https://arxiv.org/abs/2510.26236) adds grounding and anti-skating losses to the IK, and
+[OmniRetarget](https://arxiv.org/abs/2509.26633) corrects the height to the floor every frame. The common
+thread is adding **continuity** and **ground** constraints to GMR's frame-by-frame IK.
+
+Two additions, without touching GMR (`src/retarget_all.py --posture`, `scripts/igris/make_ik_config.py`):
+
+- **Continuity term.** A mink `PostureTask` on both IK stages, targeting the previous frame's solution
+  (weight 1). Switching to another solution with the same hand position now costs something, and the
+  shoulder flips go away. Above 20 the tracking goes soft.
+- **Foot position weight 50 → 200.** The IGRIS-C knee only folds to 131° (G1: 165°), so in deep crouches
+  the IK followed the pelvis target and pushed the feet under the floor. With heavier feet the pelvis stays
+  higher and the feet stay on the ground: the obstacles3 crouch's lowest pelvis goes from 0.34 m to 0.50 m.
+  The robot really cannot crouch that low, so that is the honest answer.
+
+Measured over all 14 clips. Flips are frames with more than 25 rad/s in 1/30 s; hand error is the mean
+distance to the scaled human wrist. GMR's velocity-limit option was unusable: it integrates with the
+model timestep, and the IGRIS-C MJCF has 0.00048 s, which caps motion at 0.05 rad per frame.
+
+| Clip | Flip frames v1 → v2 | Lowest sole (cm) v1 → v2 | Frames >3 cm under v1 → v2 | Hand error (mm) v1 → v2 |
+|---|---|---|---|---|
+| aiming1_subject1 | 0 → 0 | -4.8 → -3.4 | 1.9% → 0.1% | 99 → 101 |
+| dance2_subject3 | 33 → 2 | -10.8 → -4.2 | 0.7% → 0.0% | 118 → 120 |
+| jumps1_subject1 | 8 → 0 | -8.7 → -5.1 | 1.6% → 0.8% | 111 → 115 |
+| obstacles3_subject3 | 1 → 0 | -19.4 → -3.0 | 4.6% → 0.0% | 106 → 115 |
+| run2_subject4 | 2 → 1 | -4.5 → -2.2 | 0.3% → 0.0% | 124 → 129 |
+| walk1_subject1 | 0 → 0 | -3.5 → -2.9 | 0.0% → 0.0% | 103 → 109 |
+| walk1_subject2 | 0 → 0 | -2.2 → -2.7 | 0.0% → 0.0% | 107 → 112 |
+| walk1_subject5 | 1 → 0 | -3.9 → -2.8 | 0.1% → 0.0% | 94 → 98 |
+| walk2_subject1 | 4 → 1 | -7.0 → -4.7 | 1.5% → 0.7% | 120 → 124 |
+| walk2_subject3 | 2 → 0 | -21.5 → -4.5 | 5.0% → 0.9% | 110 → 114 |
+| walk2_subject4 | 0 → 0 | -2.9 → -2.8 | 0.0% → 0.0% | 110 → 115 |
+| walk3_subject2 | 0 → 0 | -3.6 → -2.2 | 0.0% → 0.0% | 106 → 112 |
+| walk3_subject5 | 1 → 0 | -8.2 → -5.2 | 4.0% → 1.3% | 148 → 151 |
+| walk4_subject1 | 0 → 0 | -2.3 → -2.4 | 0.0% → 0.0% | 164 → 163 |
+
+Flips in total 52 → 4, hand error +4 mm on average. Clips trained on v1 (aiming1, run2, obstacles3,
+dance2) are marked v1 in the table below; dance2 and jumps1 are retrained on v2.
+
 ## All 14 clips from scratch (in progress)
 
 IGRIS-C is being trained on the same 14 clips as the G1 teachers, the same way (BeyondMimic PPO, 30,000
@@ -111,11 +155,11 @@ iterations, from scratch). Evaluation: 100 rollouts from frame 0, domain randomi
 as clips finish (`scripts/igris/results_table.py`).
 
 <!-- igris-table -->
-| Clip | G1 completion | IGRIS completion | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
-|---|---|---|---|---|---|---|---|---|
-| aiming1_subject1 | 100% | 100% | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
-| dance2_subject3 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
-| run2_subject4 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
+| Clip | IGRIS reference | G1 completion | IGRIS completion | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
+|---|---|---|---|---|---|---|---|---|---|
+| aiming1_subject1 | v1 | 100% | 100% | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
+| dance2_subject3 | v1 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
+| run2_subject4 | v1 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
 <!-- /igris-table -->
 
 run2_subject4 falls in the first 20 s, going from standing into a run, so it completes 21% from frame 0

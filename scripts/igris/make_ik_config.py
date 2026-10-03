@@ -69,6 +69,11 @@ for t in ("ik_match_table1", "ik_match_table2"):
         cfg[t][body][4] = [round(float(x), 8) for x in q.as_quat(scalar_first=True)]
 assert set(cfg["human_scale_table"]) == set(SCALE)
 cfg["human_scale_table"] = SCALE
+# IGRIS 무릎은 131도까지만 접혀(G1 165도) 깊게 앉는 구간에서 골반 목표(가중치 100)를 따라가느라 발이 바닥
+# 아래로 밀렸다(261003 obstacles3 -19cm, walk2_subject3 -22cm). 발 위치 가중치를 50→200 으로 올리면 골반이
+# 덜 내려가는 대신 발이 바닥에 남는다(-3cm 안). 손 추종 오차 +4mm.
+for body in ("l_foot_original", "r_foot_original"):
+    cfg["ik_match_table2"][body][1] = 200
 
 out = cfg_dir / "bvh_lafan1_to_igris.json"
 out.write_text(json.dumps(cfg, indent=4))
