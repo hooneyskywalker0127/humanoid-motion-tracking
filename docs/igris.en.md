@@ -145,8 +145,9 @@ model timestep, and the IGRIS-C MJCF has 0.00048 s, which caps motion at 0.05 ra
 | walk3_subject5 | 1 → 0 | -8.2 → -5.2 | 4.0% → 1.3% | 148 → 151 |
 | walk4_subject1 | 0 → 0 | -2.3 → -2.4 | 0.0% → 0.0% | 164 → 163 |
 
-Flips in total 52 → 4, hand error +4 mm on average. Clips trained on v1 (aiming1, run2, obstacles3,
-dance2) are marked v1 in the table below; dance2 and jumps1 are retrained on v2.
+Flips in total 52 → 4, hand error +4 mm on average. Results trained on v1 (aiming1, run2, obstacles3,
+dance2) stay in the table below marked v1, and all 14 clips are retrained on v2, so that the
+comparison is made under one condition.
 
 ## All 14 clips from scratch (in progress)
 

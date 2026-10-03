@@ -14,8 +14,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 WBT = "/home/sehoon/Projects/whole_body_tracking/logs"
 # run2_subject4 는 igris_transfer.sh(A)에서, 나머지는 igris_all.sh 에서 평가했다.
 # 레퍼런스 v1 = 261003 이전 리타게팅(어깨 뒤집힘·발 관통), v2 = 연속성 항 + 발 가중치 200 으로 다시 만든 것.
-# v1 로 학습한 것은 폴더로 구분한다: igris_transfer/, igris_all/v1ref/, 그리고 aiming1·obstacles3(이름으로).
-V1_IN_PLACE = {"aiming1_subject1", "obstacles3_subject3"}
+# v1 로 학습한 것은 폴더로 구분한다: igris_transfer/(run2 A), igris_all/v1ref/. 14개 전부 v2 로 다시 학습한다(261003).
+V1_IN_PLACE = set()
 IGRIS = [("run2_subject4", f"{WBT}/igris_transfer/eval_a_29999.json", "v1")]
 IGRIS += [(os.path.basename(p)[5:-5], p, "v1") for p in glob.glob(f"{WBT}/igris_all/v1ref/eval_*.json")]
 IGRIS += [(os.path.basename(p)[5:-5], p, "v1" if os.path.basename(p)[5:-5] in V1_IN_PLACE else "v2")
