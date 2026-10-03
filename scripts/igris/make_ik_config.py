@@ -69,11 +69,10 @@ for t in ("ik_match_table1", "ik_match_table2"):
         cfg[t][body][4] = [round(float(x), 8) for x in q.as_quat(scalar_first=True)]
 assert set(cfg["human_scale_table"]) == set(SCALE)
 cfg["human_scale_table"] = SCALE
-# IGRIS 무릎은 131도까지만 접혀(G1 165도) 깊게 앉는 구간에서 골반 목표(가중치 100)를 따라가느라 발이 바닥
-# 아래로 밀렸다(261003 obstacles3 -19cm, walk2_subject3 -22cm). 발 위치 가중치를 50→200 으로 올리면 골반이
-# 덜 내려가는 대신 발이 바닥에 남는다(-3cm 안). 손 추종 오차 +4mm.
-for body in ("l_foot_original", "r_foot_original"):
-    cfg["ik_match_table2"][body][1] = 200
+# IGRIS 무릎은 131도까지만 접혀(G1 165도) 깊게 앉는 구간에서 발이 바닥 아래로 밀린다(261003 obstacles3 -19cm).
+# v2 에서는 발 위치 가중치를 200 으로 올려 막았는데, 공중에서 발을 끌어올리는 점프에서 골반까지 끌어올려 점프를
+# 부풀렸다(dance2 0.59m, 사람 0.47m). v3 는 가중치를 G1 과 같은 50 으로 두고 관통은 retarget_all.py --ground_lift
+# 로 IK 뒤에 잡는다.
 
 out = cfg_dir / "bvh_lafan1_to_igris.json"
 out.write_text(json.dumps(cfg, indent=4))

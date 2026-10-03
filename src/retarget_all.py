@@ -29,7 +29,34 @@ parser.add_argument("--posture", type=float, default=0.0,
                     help="IK 에 직전 프레임 자세로 끄는 연속성 항(mink.PostureTask)을 이 가중치로 붙인다. "
                          "261003 IGRIS-C: 어깨 pitch·yaw 가 한 프레임에 ~1.5rad 뒤집히는 프레임이 14클립 52개 → "
                          "1.0 에서 4개. 손 추종 오차는 +4mm. 20 이상은 추종이 무뎌진다. G1 은 0 으로 그대로.")
+parser.add_argument("--ground_lift", action="store_true",
+                    help="IK 뒤 발바닥(발 충돌 상자)이 바닥 아래면 그만큼 몸 전체를 올린다. 0.5초 창 최대값을 가우시안으로 펴 "
+                         "튐을 막는다. 261004 IGRIS-C: 발 가중치를 올려 막던 관통을 이걸로 바꾸자 점프가 부풀지 않았다 "
+                         "(dance2 136초 점프 0.59m → 0.49m, 사람 0.47m). OmniRetarget·KungfuBot 의 접지 보정과 같은 생각.")
 args = parser.parse_args()
+
+
+def ground_lift(model, qpos):
+    """qpos(T, nq) 의 루트 z 를 발 충돌 상자가 바닥(z=0) 위에 오도록 올린 사본을 돌려준다."""
+    import itertools
+    import mujoco
+    from scipy.ndimage import gaussian_filter1d, maximum_filter1d
+    data = mujoco.MjData(model)
+    signs = np.array(list(itertools.product([-1, 1], repeat=3)))
+    boxes = [g for g in range(model.ngeom)
+             if model.geom_type[g] == mujoco.mjtGeom.mjGEOM_BOX and model.geom_contype[g]
+             and "foot" in mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, model.geom_bodyid[g])]
+    assert boxes, "발 충돌 상자를 못 찾았다"
+    sole = np.empty(len(qpos))
+    for t, q in enumerate(qpos):
+        data.qpos[:] = q
+        mujoco.mj_kinematics(model, data)
+        sole[t] = min(((data.geom_xpos[g] + (signs * model.geom_size[g]) @ data.geom_xmat[g].reshape(3, 3).T)[:, 2]).min()
+                      for g in boxes)
+    need = np.maximum(0.0, -sole)
+    out = qpos.copy()
+    out[:, 2] += np.maximum(need, gaussian_filter1d(maximum_filter1d(need, 15), 4))
+    return out
 
 
 class GMRPosture(GMR):
@@ -80,6 +107,8 @@ for path in files:
             retargeter.retarget(frames[0])
         qpos = np.array([retargeter.retarget(f)
                          for f in tqdm(frames, desc=seq, leave=False)])
+        if args.ground_lift:
+            qpos = ground_lift(retargeter.model, qpos)
     except Exception as e:
         print(f"FAILED {seq}: {e}")
         failed.append((seq, str(e)))
