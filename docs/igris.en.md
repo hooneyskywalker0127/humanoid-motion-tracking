@@ -146,8 +146,30 @@ model timestep, and the IGRIS-C MJCF has 0.00048 s, which caps motion at 0.05 ra
 | walk4_subject1 | 0 → 0 | -2.3 → -2.4 | 0.0% → 0.0% | 164 → 163 |
 
 Flips in total 52 → 4, hand error +4 mm on average. Results trained on v1 (aiming1, run2, obstacles3,
-dance2) stay in the table below marked v1, and all 14 clips are retrained on v2, so that the
+dance2) stay in the table below marked v1, and all 14 clips are retrained on v3, so that the
 comparison is made under one condition.
+
+### Retargeting v3 — grounding the feet after the IK instead of weighting them
+
+dance2 retrained on v2 got stuck from about 8,000 iterations at 61% of the clip (136 s), with the
+adaptive sampler drawing that spot 70% of the time. It is a tuck jump that lifts the feet to 72 cm.
+The human pelvis rises 0.47 m; the v2 reference asked for 0.59 m. With a knee that folds only to 131°,
+the foot weight of 200 pulled the pelvis up to reach the foot targets. The setting that helped in
+crouches inflated the jump.
+
+v3 puts the foot weight back to the G1's 50 and fixes penetration after the IK
+(`src/retarget_all.py --ground_lift`): if a foot collision box is below the floor, the whole body is
+lifted by that much, with the lift spread over a 0.5 s window so it does not jump. This is the same
+idea as the grounding correction in OmniRetarget and KungfuBot. mink's collision-avoidance limit was
+tried first; it only stops a foot from going deeper, it does not push out one that is already under.
+
+| | v2 | v3 |
+|---|---|---|
+| dance2 jump at 136 s (human 0.47 m, G1 0.42 m) | 0.59 m | 0.49 m |
+| Lowest sole, 14 clips | -2.2 to -5.2 cm | 0.0 cm |
+| Max root vertical speed (run2) | 2.07 m/s | 1.27 m/s |
+
+The dance2 training on v2 (8,600 iterations) was stopped and restarted on v3.
 
 ## All 14 clips from scratch (in progress)
 
