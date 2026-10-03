@@ -111,14 +111,22 @@ iterations, from scratch). Evaluation: 100 rollouts from frame 0, domain randomi
 as clips finish (`scripts/igris/results_table.py`).
 
 <!-- igris-table -->
-| Clip | G1 completion | IGRIS completion | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
-|---|---|---|---|---|---|---|
-| aiming1_subject1 | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
-| run2_subject4 | 99% | 21% | 47 | 59 | 0.111 | 0.105 |
+| Clip | G1 completion | IGRIS completion | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
+|---|---|---|---|---|---|---|---|---|
+| aiming1_subject1 | 100% | 100% | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
+| dance2_subject3 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
+| run2_subject4 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
 <!-- /igris-table -->
 
 run2_subject4 falls in the first 20 s, going from standing into a run, so it completes 21% from frame 0
-(section above).
+(section above). The rollouts that fall do so about 4 s in, while accelerating from 0 to 2.9 m/s.
+
+dance2_subject3 falls in all 100 rollouts, on average 136 s in (60% of the clip). The cause is the
+retargeting, not the training. In the IGRIS-C reference the shoulder pitch and yaw jump about 1.5 rad
+within one frame (1/30 s) in 33 frames (13 for the G1 on the same clip). With the arm raised, the IK seems
+to switch to another solution that gives the same hand position, and the jump at 129 s comes right before
+the mean fall time. jumps1_subject1 has 8 such frames, so it was moved to the end of the training order.
+Both are retrained once the retargeting is fixed.
 
 Checkpoints and evaluations: [Hugging Face `igris_c/`](https://huggingface.co/hooneyskywalker/humanoid-motion-tracking-policies/tree/main/igris_c) ·
 training curves: [W&B `igris_c_transfer`, `igris_c_scratch`](https://wandb.ai/hooneyskywalker-humanoid/humanoid-motion-tracking)

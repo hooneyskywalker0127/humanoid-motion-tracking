@@ -107,13 +107,21 @@ G1 교사와 같은 14개 클립을 IGRIS-C에서 같은 방식(BeyondMimic PPO,
 (`scripts/igris/results_table.py`).
 
 <!-- igris-table -->
-| 클립 | G1 완주 | IGRIS 완주 | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
-|---|---|---|---|---|---|---|
-| aiming1_subject1 | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
-| run2_subject4 | 99% | 21% | 47 | 59 | 0.111 | 0.105 |
+| 클립 | G1 완주 | IGRIS 완주 | G1 평균 생존 | IGRIS 평균 생존 | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
+|---|---|---|---|---|---|---|---|---|
+| aiming1_subject1 | 100% | 100% | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
+| dance2_subject3 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
+| run2_subject4 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
 <!-- /igris-table -->
 
 run2_subject4는 정지 상태에서 달리기로 들어가는 첫 20초에서 쓰러져 프레임 0 완주가 21%입니다(위 절).
+넘어지는 롤아웃은 평균 약 4초, 0에서 2.9m/s로 가속하는 구간에서 쓰러집니다.
+
+dance2_subject3은 100번 모두 넘어지고, 평균 136초(클립의 60%)까지 갑니다. 원인은 학습이 아니라
+리타게팅입니다. IGRIS-C 레퍼런스에서 어깨 pitch·yaw가 한 프레임(1/30초) 만에 약 1.5rad 뒤집히는 곳이
+33프레임 있습니다(G1은 같은 클립에서 13프레임). 팔을 든 자세에서 IK가 같은 손 위치를 내는 다른 해로
+갈아타는 것으로 보이고, 129초의 뒤집힘이 넘어지는 평균 시점 바로 앞입니다. 같은 현상이 jumps1_subject1에
+8프레임 있어 그 클립은 학습 순서를 맨 뒤로 미뤘습니다. 리타게팅을 고친 뒤 둘을 다시 학습합니다.
 
 체크포인트와 평가: [Hugging Face `igris_c/`](https://huggingface.co/hooneyskywalker/humanoid-motion-tracking-policies/tree/main/igris_c) ·
 학습 곡선: [W&B `igris_c_transfer`, `igris_c_scratch`](https://wandb.ai/hooneyskywalker-humanoid/humanoid-motion-tracking)

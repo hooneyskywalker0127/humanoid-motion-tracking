@@ -20,14 +20,17 @@ rows = []
 for seq in sorted(IGRIS):
     i = json.load(open(IGRIS[seq]))
     g = json.load(open(f"{REPO}/outputs/eval/{seq}.json"))
-    rows.append(f"| {seq} | {g['success_rate']:.0%} | {i['success_rate']:.0%} | "
-                f"{g['e_mpbpe_mm']:.0f} | {i['e_mpbpe_mm']:.0f} | "
-                f"{g['e_mpjpe_rad']:.3f} | {i['e_mpjpe_rad']:.3f} |")
+    # 완주가 0이면 오차는 정의되지 않는다(완주한 롤아웃에서만 잰다). 대신 평균 생존 비율로 어디까지 갔는지 본다.
+    f = lambda v, fmt: "—" if v != v else format(v, fmt)
+    alive = lambda d: d["mean_alive_frames"] / d["motion_frames"]
+    rows.append(f"| {seq} | {g['success_rate']:.0%} | {i['success_rate']:.0%} | {alive(g):.0%} | {alive(i):.0%} | "
+                f"{f(g['e_mpbpe_mm'], '.0f')} | {f(i['e_mpbpe_mm'], '.0f')} | "
+                f"{f(g['e_mpjpe_rad'], '.3f')} | {f(i['e_mpjpe_rad'], '.3f')} |")
 
-HEAD = {"ko": "| 클립 | G1 완주 | IGRIS 완주 | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |",
-        "en": "| Clip | G1 completion | IGRIS completion | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |"}
+HEAD = {"ko": "| 클립 | G1 완주 | IGRIS 완주 | G1 평균 생존 | IGRIS 평균 생존 | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |",
+        "en": "| Clip | G1 completion | IGRIS completion | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |"}
 for lang, path in (("ko", "docs/igris.md"), ("en", "docs/igris.en.md")):
-    table = "\n".join([HEAD[lang], "|---|---|---|---|---|---|---|", *rows])
+    table = "\n".join([HEAD[lang], "|---|---|---|---|---|---|---|---|---|", *rows])
     p = os.path.join(REPO, path)
     s = open(p).read()
     s, n = re.subn(r"<!-- igris-table -->.*?<!-- /igris-table -->",
