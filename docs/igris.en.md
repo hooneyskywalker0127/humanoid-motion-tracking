@@ -172,11 +172,21 @@ tried first; it only stops a foot from going deeper, it does not push out one th
 The dance2 training on v2 (8,600 iterations) was stopped and restarted on v3.
 
 dance2 trained to 30,000 iterations on v3 still completes 0%. The mean fall is at 137 s (61% of the clip),
-the same place as on v1 (136 s), and the adaptive sampler sat on that tuck jump throughout training.
-Since it falls at the same spot after the reference defects are gone, the cause seems to lie outside the
-reference, but it is not confirmed. One guess is knee torque per body weight at about 58% of the G1's
-(knee 150 N·m / 58 kg with 1.12x longer legs, against 139 N·m / 35 kg). dance2 is not tuned further;
-the walking clips train next.
+the same place as on v1 (136 s), and the adaptive sampler sat near that tuck jump (129–137 s) throughout
+training. It falls there even after the kinematic defects (flips, penetration, inflated jump) are gone.
+
+So I measured whether the reference is **physically achievable**, with inverse dynamics
+(`src/reference_qa.py`): compute the generalized forces without contact, explain the root wrench with
+the forces the grounded sole points can push (upward only, friction pyramid), and compare the remaining
+joint torques with the training torque limits. Over 128–142 s IGRIS-C asks the waist for up to 4.7x its
+limit (at 129.2 s, a fast arm swing) and exceeds it in 24% of the frames; the G1 needs at most 1.3x, in
+3%. The knee peaks at 1.1x and is not the bottleneck, so the earlier knee guess is withdrawn.
+
+The likely reason is upper-body mass. Above the IGRIS-C waist sit 27.5 kg; just holding the torso fully
+tilted takes 55 N·m, 92% of the waist limit (60 N·m in the vendor MJCF). The G1's is 15.9 kg and 29 N·m,
+58% of its 50 N·m. IGRIS-C has almost no margin left for motion. This is the demand computed from the
+reference; whether the trained policy actually saturates the waist at that moment has not been measured.
+dance2 is not tuned further; the walking clips train next.
 
 ## All 14 clips from scratch (in progress)
 
