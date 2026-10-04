@@ -171,6 +171,13 @@ tried first; it only stops a foot from going deeper, it does not push out one th
 
 The dance2 training on v2 (8,600 iterations) was stopped and restarted on v3.
 
+dance2 trained to 30,000 iterations on v3 still completes 0%. The mean fall is at 137 s (61% of the clip),
+the same place as on v1 (136 s), and the adaptive sampler sat on that tuck jump throughout training.
+Since it falls at the same spot after the reference defects are gone, the cause seems to lie outside the
+reference, but it is not confirmed. One guess is knee torque per body weight at about 58% of the G1's
+(knee 150 N·m / 58 kg with 1.12x longer legs, against 139 N·m / 35 kg). dance2 is not tuned further;
+the walking clips train next.
+
 ## All 14 clips from scratch (in progress)
 
 IGRIS-C is being trained on the same 14 clips as the G1 teachers, the same way (BeyondMimic PPO, 30,000
@@ -182,6 +189,7 @@ as clips finish (`scripts/igris/results_table.py`).
 |---|---|---|---|---|---|---|---|---|---|
 | aiming1_subject1 | v1 | 100% | 100% | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
 | dance2_subject3 | v1 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
+| dance2_subject3 | v3 | 100% | 0% | 100% | 61% | 45 | — | 0.104 | — |
 | obstacles3_subject3 | v1 | 98% | 0% | 99% | 1% | 54 | — | 0.101 | — |
 | run2_subject4 | v1 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
 <!-- /igris-table -->
