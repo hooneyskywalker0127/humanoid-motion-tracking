@@ -184,9 +184,21 @@ limit (at 129.2 s, a fast arm swing) and exceeds it in 24% of the frames; the G1
 
 The likely reason is upper-body mass. Above the IGRIS-C waist sit 27.5 kg; just holding the torso fully
 tilted takes 55 N·m, 92% of the waist limit (60 N·m in the vendor MJCF). The G1's is 15.9 kg and 29 N·m,
-58% of its 50 N·m. IGRIS-C has almost no margin left for motion. This is the demand computed from the
-reference; whether the trained policy actually saturates the waist at that moment has not been measured.
-dance2 is not tuned further; the walking clips train next.
+58% of its 50 N·m. IGRIS-C has almost no margin left for motion.
+
+**Measured on the trained policy, though, this is not what ends dance2.** With `eval.py --torque_log`
+recording joint torque saturation over 100 rollouts, the share at the limit just before the falls
+(125–137 s) is 3.5% at the waist, 2.7% at the ankles and 0% at the knees. All 100 rollouts end at
+137.9–138.0 s, the top of the tuck jump, when the whole reference body is in the air (lowest body 0.76 m
+above the floor). The policy does not jump and tuck that far, and the 25 cm height-error termination
+fires in every rollout at once. It barely uses its torque, so it is not running out of strength; it does
+not attempt the jump. The waist and knee guesses are withdrawn for dance2. dance2 is not tuned further;
+the walking clips train next.
+
+Where the waist calculation matters is walking with a bent torso. In walk3_subject5 the torso leans 64°,
+and IGRIS-C needs 106% of the waist limit just to **stand still** in that posture (G1: 52%). However the
+knees or hips bend, the waist moment is the same while the torso is tilted, so retargeting cannot avoid
+it. This is recorded as a prediction before training, to be checked against the result.
 
 ## All 14 clips from scratch (in progress)
 
