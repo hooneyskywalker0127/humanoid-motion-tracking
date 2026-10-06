@@ -215,6 +215,7 @@ as clips finish (`scripts/igris/results_table.py`).
 | obstacles3_subject3 | v1 | 98% | 0% | 99% | 1% | 54 | — | 0.101 | — |
 | run2_subject4 | v1 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
 | walk1_subject1 | v3 | 99% | 100% | 99% | 100% | 34 | 35 | 0.066 | 0.073 |
+| walk1_subject2 | v3 | 100% | 100% | 100% | 100% | 34 | 36 | 0.066 | 0.067 |
 <!-- /igris-table -->
 
 run2_subject4 falls in the first 20 s, going from standing into a run, so it completes 21% from frame 0
