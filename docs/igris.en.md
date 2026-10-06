@@ -218,6 +218,8 @@ as clips finish (`scripts/igris/results_table.py`).
 | walk1_subject2 | v3 | 100% | 100% | 100% | 100% | 34 | 36 | 0.066 | 0.067 |
 <!-- /igris-table -->
 
+walk1_subject2 was OOM-killed at iteration 27,441 and resumed from model_27000 to 30,000 (resuming resets only the adaptive sampler state). walk1_subject5 was resumed from 15,000 after a reboot.
+
 run2_subject4 falls in the first 20 s, going from standing into a run, so it completes 21% from frame 0
 (section above). The rollouts that fall do so about 4 s in, while accelerating from 0 to 2.9 m/s.
 
