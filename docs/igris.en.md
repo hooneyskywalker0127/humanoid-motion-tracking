@@ -221,6 +221,7 @@ as clips finish (`scripts/igris/results_table.py`).
 | walk2_subject3 | v3 | 96% | 96% | 98% | 98% | 50 | 49 | 0.104 | 0.116 |
 | walk2_subject4 | v3 | 99% | 95% | 100% | 99% | 40 | 38 | 0.085 | 0.083 |
 | walk3_subject2 | v3 | 100% | 100% | 100% | 100% | 34 | 37 | 0.071 | 0.078 |
+| walk3_subject5 | v3 | 100% | 100% | 100% | 100% | 36 | 44 | 0.082 | 0.106 |
 <!-- /igris-table -->
 
 walk1_subject2 was OOM-killed at iteration 27,441 and resumed from model_27000 to 30,000 (resuming resets only the adaptive sampler state). walk1_subject5 was resumed from 15,000 after a reboot.
