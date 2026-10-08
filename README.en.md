@@ -25,12 +25,12 @@ tracking) end to end.
 ## News
 
 - **[2026-10-02]** [Two fixes in the IGRIS-C retargeting](docs/igris.en.md): with the G1 settings the elbows lock straight, and measuring the legs to the ankle sinks the feet 1.8 cm into the floor for the whole walk. The retargeting table is what has to change when the robot changes.
-- **[2026-10-02]** [IGRIS-C policy](docs/igris.en.md#training-from-scratch-vs-transferring-the-g1-policy): the same running clip trained from scratch (96% completion) vs. the G1 policy transferred the Any2Any way (16%). Transfer learns ten times faster early on but stops lower. At first nothing learned at all because of self-collision.
+- **[2026-10-02]** [IGRIS-C policy](docs/igris.en.md#training-from-scratch-vs-transferring-the-g1-policy): the same running clip trained from scratch (96% success rate) vs. the G1 policy transferred the Any2Any way (16%). Transfer learns ten times faster early on but stops lower. At first nothing learned at all because of self-collision.
 - **[2026-10-01]** [Reward ablation](docs/reward_ablation.en.md): all three groups of tracking rewards are needed. Without the anchor terms the robot drifts (1.25 m global error); without the body-pose terms it falls within two seconds. The velocity terms did more to hold global position than the anchor terms.
 - **[2026-09-30]** [IGRIS-C retargeting](docs/igris.en.md), a second robot. A C++ real-time inference loop fits the 20 ms control budget with close to a tenfold margin ([robustness](docs/robustness.en.md)).
-- **[2026-09-29]** [Model-mismatch sweep](docs/robustness.en.md): one step (20 ms) of latency drops completion from 99.9% to 29.6%. Fixed an evaluation bug that ran with randomization on and had inverted a comparison. Metrics renamed to the names used by the papers that define them.
+- **[2026-09-29]** [Model-mismatch sweep](docs/robustness.en.md): one step (20 ms) of latency drops success rate from 99.9% to 29.6%. Fixed an evaluation bug that ran with randomization on and had inverted a comparison. Metrics renamed to the names used by the papers that define them.
 - **[2026-09-27]** Measured the generalization limit: 0 of the 63 held-out LAFAN1 clips complete.
-- **[2026-09-24]** [Distilled](docs/pipeline.en.md#5-policy-distillation) 14 single-motion experts into one policy. It matches or beats them on all six metrics.
+- **[2026-09-24]** [Distilled](docs/pipeline.en.md#5-policy-distillation) 14 single-motion teachers into one student. It matches or beats them on all six metrics.
 - **[2026-09-14]** Teacher policies checked in MuJoCo ([sim-to-sim](docs/sim2sim.en.md)). A motion from outside LAFAN1 ([kobe](docs/kobe.en.md)) trained as well.
 - **[2026-09-10]** All 17 LAFAN1 teacher policies trained.
 - **[2026-09-02]** First teacher policy: 30,000 iterations in 8 h 38 min on an RTX 5080.
@@ -59,19 +59,19 @@ tracking) end to end.
 | 2. Retargeting | Human skeleton poses become robot joint angles. No physics | [GMR](https://github.com/YanjieZe/GMR) |
 | 3. Reference selection | Pick motions the robot can follow and write 50 fps npz files | Isaac Sim |
 | 4. Teacher policies | One RL policy per motion | [BeyondMimic](https://github.com/HybridRobotics/whole_body_tracking), PPO |
-| 5. Consolidation | Distill 14 teachers into one student (DAgger) | Isaac Lab |
+| 5. Policy Distillation | Distill 14 teachers into one student (DAgger) | Isaac Lab |
 | Checks | Move to a second simulator, perturb the model, time inference | MuJoCo, C++ |
 
 Stage-by-stage details and evaluation criteria: [docs/pipeline.en.md](docs/pipeline.en.md).
 
 ## Results
 
-**Fourteen experts become one policy, which matches or beats them on all six metrics.**
+**Fourteen teachers become one student, which matches or beats them on all six metrics.**
 
-| | Completion | E_g-mpbpe | E_mpbpe | E_mpjpe | E_mpbve | E_mpbae |
+| | Success rate | E_g-mpbpe | E_mpbpe | E_mpjpe | E_mpbve | E_mpbae |
 |---|---|---|---|---|---|---|
-| 14 experts, each on its own clip | 99.0% | 102mm | 42mm | 0.084 | 4.78 | 2.09 |
-| **one unified policy** | **99.7%** | **90mm** | **41mm** | **0.082** | **4.32** | **1.91** |
+| 14 teachers, each on its own clip | 99.0% | 102mm | 42mm | 0.084 | 4.78 | 2.09 |
+| **one student** | **99.7%** | **90mm** | **41mm** | **0.082** | **4.32** | **1.91** |
 
 100 rollouts, domain randomization off, full clip length, identical evaluation code. Errors
 are averaged over completed rollouts. Metrics follow the [GMR paper](https://arxiv.org/abs/2510.02252)
@@ -81,9 +81,9 @@ What works and what does not were both measured.
 
 | What | Result | Details |
 |---|---|---|
-| The 14 training clips | 99.7% completion | [pipeline](docs/pipeline.en.md#5-policy-distillation) |
+| The 14 training clips | 99.7% success rate | [pipeline](docs/pipeline.en.md#5-policy-distillation) |
 | 63 held-out LAFAN1 clips | **0 complete** — it does not generalize | [pipeline](docs/pipeline.en.md#what-it-cannot-do-was-measured-too) |
-| Pushes at training strength | experts 91.0%, unified 84.3% — experts recover better | [pipeline](docs/pipeline.en.md#under-perturbation-the-experts-win) |
+| Pushes at training strength | teachers 91.0%, student 84.3% — teachers recover better | [pipeline](docs/pipeline.en.md#under-perturbation-the-experts-win) |
 | Domain randomization on | 76.1% | [pipeline](docs/pipeline.en.md#5-policy-distillation) |
 | Moved to MuJoCo | 12 of 14 complete | [sim2sim](docs/sim2sim.en.md) |
 | One step (20 ms) of control latency | **29.6%** — the most damaging axis | [robustness](docs/robustness.en.md) |
@@ -130,7 +130,7 @@ On [Hugging Face](https://huggingface.co/hooneyskywalker/humanoid-motion-trackin
 
 | Folder | Contents |
 |---|---|
-| `student/` | The unified policy (`final_model.pt`, `policy.onnx`) and its evaluations. Hidden [2048, 2048, 1024, 1024, 512], 260 observations, 29 actions |
+| `student/` | The student (`final_model.pt`, `policy.onnx`) and its evaluations. Hidden [2048, 2048, 1024, 1024, 512], 260 observations, 29 actions |
 | `policies/<sequence>/` | The 17 per-clip teachers (`model_29999.pt`, `policy.onnx`) |
 | `eval/`, `eval_polysim/`, `sym/` | Teacher evaluations and MuJoCo transfer evaluations |
 | `igris_c/` | The two IGRIS-C policies (from scratch, Any2Any), per-checkpoint evaluations, the joint map |
