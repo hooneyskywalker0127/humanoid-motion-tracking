@@ -24,8 +24,8 @@ tracking) end to end.
 
 ## News
 
-- **[2026-10-02]** [Two fixes in the IGRIS-C retargeting](docs/igris.en.md): with the G1 settings the elbows lock straight, and measuring the legs to the ankle sinks the feet 1.8 cm into the floor for the whole walk. The retargeting table is what has to change when the robot changes.
-- **[2026-10-02]** [IGRIS-C policy](docs/igris.en.md#training-from-scratch-vs-transferring-the-g1-policy): the same running clip trained from scratch (96% success rate) vs. the G1 policy transferred the Any2Any way (16%). Transfer learns ten times faster early on but stops lower. At first nothing learned at all because of self-collision.
+- **[2026-10-08]** [IGRIS-C 14-clip training](docs/igris.en.md) in progress: under the same conditions as the G1 (from frame 0, 100 rollouts, domain randomization off) all seven walking clips reach a 95–100% success rate, on par with the G1. dance2 is at 0%: at the top of the tuck jump the policy does not attempt the jump (cause not confirmed). Retargeting v3 fixed IK flips (52 → 4) and foot penetration.
+- **[2026-10-02]** [Two fixes in the IGRIS-C retargeting](docs/igris.en.md): with the G1 settings the elbows lock straight, and measuring the legs to the ankle sinks the feet 1.8 cm into the floor for the whole walk. Also compared the same running clip trained from scratch against [the G1 policy transferred the Any2Any way](docs/igris.en.md#training-from-scratch-vs-transferring-the-g1-policy) (from frame 1000: 96% vs 16% success rate). Transfer learns ten times faster early on but stops lower.
 - **[2026-10-01]** [Reward ablation](docs/reward_ablation.en.md): all three groups of tracking rewards are needed. Without the anchor terms the robot drifts (1.25 m global error); without the body-pose terms it falls within two seconds. The velocity terms did more to hold global position than the anchor terms.
 - **[2026-09-30]** [IGRIS-C retargeting](docs/igris.en.md), a second robot. A C++ real-time inference loop fits the 20 ms control budget with close to a tenfold margin ([robustness](docs/robustness.en.md)).
 - **[2026-09-29]** [Model-mismatch sweep](docs/robustness.en.md): one step (20 ms) of latency drops success rate from 99.9% to 29.6%. Fixed an evaluation bug that ran with randomization on and had inverted a comparison. Metrics renamed to the names used by the papers that define them.
@@ -83,7 +83,7 @@ What works and what does not were both measured.
 |---|---|---|
 | The 14 training clips | 99.7% success rate | [pipeline](docs/pipeline.en.md#5-policy-distillation) |
 | 63 held-out LAFAN1 clips | **0 complete** — it does not generalize | [pipeline](docs/pipeline.en.md#what-it-cannot-do-was-measured-too) |
-| Pushes at training strength | teachers 91.0%, student 84.3% — teachers recover better | [pipeline](docs/pipeline.en.md#under-perturbation-the-experts-win) |
+| Pushes at training strength | teachers 91.0%, student 84.3% — teachers recover better | [pipeline](docs/pipeline.en.md#under-perturbation-the-teachers-win) |
 | Domain randomization on | 76.1% | [pipeline](docs/pipeline.en.md#5-policy-distillation) |
 | Moved to MuJoCo | 12 of 14 complete | [sim2sim](docs/sim2sim.en.md) |
 | One step (20 ms) of control latency | **29.6%** — the most damaging axis | [robustness](docs/robustness.en.md) |

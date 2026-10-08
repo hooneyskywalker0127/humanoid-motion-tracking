@@ -23,12 +23,12 @@
 
 ## News
 
-- **[2026-10-02]** [IGRIS-C Retargeting에서 고친 두 곳](docs/igris.md): G1 설정을 그대로 쓰면 팔꿈치가 쭉 펴진 채 굳고, 다리를 발목까지 재면 걷는 내내 발이 바닥 아래 1.8cm에 박힙니다. 로봇을 바꿀 때 손봐야 하는 곳이 Retargeting 표입니다.
-- **[2026-10-02]** [IGRIS-C Policy](docs/igris.md#처음부터-학습-vs-g1-policy에서-옮기기): 같은 달리기 클립을 처음부터 학습한 것(Success Rate 96%)과 G1 Policy를 Any2Any 방식으로 옮긴 것(16%)을 비교했습니다. 옮긴 쪽이 초반엔 10배 빨리 배우지만 낮게 멈춥니다. 처음엔 자기 충돌 때문에 전혀 학습되지 않았습니다.
+- **[2026-10-08]** [IGRIS-C 14클립 학습](docs/igris.md) 진행 중: G1과 같은 조건(frame 0부터, 100 rollout, Domain Randomization 끔)에서 걷기 7개 모두 Success Rate 95–100%로 G1과 동등합니다. dance2는 0%로, 점프 꼭대기에서 Policy가 점프를 시도하지 않습니다(원인 미확인). Retargeting v3에서 IK 뒤집힘(52 → 4)과 발 관통을 고쳤습니다.
+- **[2026-10-02]** [IGRIS-C Retargeting에서 고친 두 곳](docs/igris.md): G1 설정을 그대로 쓰면 팔꿈치가 쭉 펴진 채 굳고, 다리를 발목까지 재면 걷는 내내 발이 바닥 아래 1.8cm에 박힙니다. 같은 달리기 클립을 처음부터 학습한 것과 [G1 Policy를 Any2Any 방식으로 옮긴 것](docs/igris.md#처음부터-학습-vs-g1-policy에서-옮기기)도 비교했습니다(1000프레임부터 Success Rate 96% vs 16%). 옮긴 쪽이 초반엔 10배 빨리 배우지만 낮게 멈춥니다.
 - **[2026-10-01]** [Reward ablation](docs/reward_ablation.md): Tracking Reward 세 묶음 모두 필요합니다. Anchor 항을 빼면 표류(전역 오차 1.25m), 몸체 자세 항을 빼면 2초 만에 쓰러집니다. 전역 위치를 붙잡는 몫은 Anchor 항보다 속도 항이 더 컸습니다.
 - **[2026-09-30]** 두 번째 로봇 [IGRIS-C Retargeting](docs/igris.md). C++ 실시간 Inference 루프가 20ms 제어 예산에 10배 가까운 여유로 듭니다([견고성](docs/robustness.md)).
 - **[2026-09-29]** [모델 불일치 민감도](docs/robustness.md): 지연 한 스텝(20ms)에 Success Rate 99.9% → 29.6%. 평가 코드가 Domain Randomization을 켠 채 돌던 버그를 고쳐 비교를 바로잡았습니다. 지표 이름을 정의한 논문의 것으로 바꿨습니다.
-- **[2026-09-27]** 일반화 한계 측정: LAFAN1의 학습에 없던 63개 클립 중 Success Rate 0개.
+- **[2026-09-27]** 일반화 한계 측정: LAFAN1의 학습에 없던 63개 클립 중 성공 0개.
 - **[2026-09-24]** 단일 동작 Teacher 14개를 Policy 하나로 [Distillation](docs/pipeline.md#5단계-policy-distillation). 여섯 지표 전부 같거나 낫습니다.
 - **[2026-09-14]** Teacher를 MuJoCo로 옮겨 검증([sim-to-sim](docs/sim2sim.md)). LAFAN1 밖의 동작([kobe](docs/kobe.md))도 학습.
 - **[2026-09-10]** LAFAN1 Teacher 17개 학습 완료.
