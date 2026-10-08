@@ -115,7 +115,7 @@ rollout만 평균낸 값입니다. 지표 정의는 [GMR 논문](https://arxiv.o
 | 로봇 | 자유도 | 키 / 무게 | Retargeting | Teacher 학습 | Distillation | sim-to-sim |
 |---|---|---|---|---|---|---|
 | Unitree G1 | 29 | 1.32m / 35kg | ✅ LAFAN1 77개 | ✅ 14개 | ✅ 14 → 1 | ✅ MuJoCo |
-| [IGRIS-C](https://github.com/robrosinc/igris_c_description_public) | 31 | 1.5m / 58kg | ✅ 14개 | ✅ 12개 (14개 학습 중) | — | — |
+| [IGRIS-C](https://github.com/robrosinc/igris_c_description_public) | 31 | 1.5m / 58kg | ✅ 14개 | ✅ 13개 (14개 학습 중) | — | — |
 
 ![igris_transfer](docs/igris_transfer.png)
 
