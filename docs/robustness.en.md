@@ -9,7 +9,7 @@ simulator can disagree with a real robot was perturbed **on its own**, to see wh
 consolidated policy fails. 14 clips, 64 rollouts per clip, domain randomization off,
 full clip length.
 
-| Axis | Completion |
+| Axis | Success rate |
 |---|---|
 | Baseline | 99.9% |
 | **Latency** 1 step (20 ms) / 2 steps | **29.6% / 0%** |
@@ -29,7 +29,7 @@ The rest are one-sided. Only heavier, more slippery or weaker hurts. Higher gain
 if anything, safer (100% at ×1.05 and ×1.1).
 
 Errors are averaged over completed rollouts only, so **read them together with
-completion**. At torque ×0.7 the E_g-mpbpe is lower than baseline because half the
+success rate**. At torque ×0.7 the E_g-mpbpe is lower than baseline because half the
 rollouts dropped out and only the easy stretches remain.
 
 ## Real-time inference loop — does it fit the 20 ms budget

@@ -145,14 +145,14 @@ reference, the network has to learn the subtraction first.
 Every teacher is [512, 256, 128]; the student is
 [2048, 2048, 1024, 1024, 512]. **That capacity is what decided the result.**
 It started at [1024, 512, 256] and one clip out of fourteen stayed stuck at 9%
-completion. Sixteen hypotheses were falsified before the cause turned out to be
+success rate. Sixteen hypotheses were falsified before the cause turned out to be
 capacity: raising the training episode from 10 s to 40 s and widening the
 network fourfold took the worst clip to 98.4%. This is the point the BumbleBee
 paper makes when it reports that a three-layer MLP could not hold several
-experts and was replaced with a transformer.
+teachers and was replaced with a transformer.
 
 14 policies are used as teachers. Of the 17 that were trained, the three with a
-0% completion rate have no finished rollout to imitate. kobe is held out as the
+0% success rate have no finished rollout to imitate. kobe is held out as the
 control for generalisation.
 
 ### Multiple clips in one environment
@@ -183,13 +183,13 @@ the merged policy toward walking.
 
 64 rollouts, domain randomization off, full clip length.
 
-| | Completion | E_g-mpbpe | E_mpbpe | E_mpjpe |
+| | Success rate | E_g-mpbpe | E_mpbpe | E_mpjpe |
 |---|---|---|---|---|
-| 14 experts, each on its own clip | 99.0% | 102mm | 42mm | 0.084 |
-| **one unified policy** | **99.7%** | **90mm** | **41mm** | **0.082** |
+| 14 teachers, each on its own clip | 99.0% | 102mm | 42mm | 0.084 |
+| **one student** | **99.7%** | **90mm** | **41mm** | **0.082** |
 
 Both sides: 100 rollouts, the same condition, identical evaluation code. **The
-unified policy matches or beats the experts on all six metrics.** Eleven of the
+student matches or beats the teachers on all six metrics.** Eleven of the
 fourteen complete at 100% and the other three (walk1_subject1 and walk2_subject3
 at 99%, jumps1_subject1 at 98%) stay above 98%, and global position error is lower on all fourteen, by 12 mm on
 average.
@@ -204,7 +204,7 @@ Three things come with it.
   randomized friction, torso CoM, joint offsets and reset pose. The more
   dynamic the motion, the more it costs (running 43.8%, walk4 98.4%).
 - **motion transition** — switching the reference to the next clip without
-  resetting the robot holds for 6 of 13 boundaries. Fourteen separate experts
+  resetting the robot holds for 6 of 13 boundaries. Fourteen separate teachers
   structurally cannot do this: the instant you swap networks, the robot is in a
   state the incoming policy has never seen.
 
@@ -212,11 +212,11 @@ Three things come with it.
 
 Every remaining LAFAN1 sequence — 63 clips — was retargeted and run through the
 same policy. Nothing was retrained. The split follows SONIC. This table is over
-**64 rollouts**; the teacher comparison above is over 100. Completion turns out
+**64 rollouts**; the teacher comparison above is over 100. Success rate turns out
 to be insensitive to both - the same clip measured at 32, 64, 128 and 256
 environments stays within 2 points.
 
-| | Clips | Completion | Survived |
+| | Clips | Success rate | Survived |
 |---|---|---|---|
 | the 14 training clips | 14 | 99.89% | 100% |
 | test-repetition — a motion type **in** training, a take that is not | 35 | 0.0% | 13.4% |
@@ -232,17 +232,17 @@ Fourteen clips is three orders of magnitude below what general trackers train on
 Being conditioned on the reference rather than a clip index is a **necessary
 condition for generalization, not a sufficient one.**
 
-### Under perturbation the experts win
+### Under perturbation the teachers win
 
 The "no loss" above is measured in clean conditions. Putting teachers and
 student under identical pushes reverses it.
 
-| Push magnitude | 14 experts | unified policy |
+| Push magnitude | 14 teachers | student |
 |---|---|---|
 | same as training | 91.0% | 84.3% |
 | twice that | 31.7% | 23.3% |
 
-E_g-mpbpe is still lower for the unified policy on 11 of 14 clips. Tracking accuracy
+E_g-mpbpe is still lower for the student on 11 of 14 clips. Tracking accuracy
 holds; what degrades is **recovery after being pushed**. Distillation learning
 the teachers' mean behaviour, with recovery from perturbed states rare in the
 data, is a plausible explanation but was not verified. Adding perturbation to
@@ -304,7 +304,7 @@ side by side.
 
 | metric | meaning |
 | --- | --- |
-| completion rate | fraction of rollouts that reach the end of the clip without the anchor body's height or orientation passing its threshold |
+| success rate | fraction of rollouts that reach the end of the clip without the anchor body's height or orientation passing its threshold |
 | E_g-mpbpe | mean body position error in global coordinates (mm) |
 | E_mpbpe | mean body position error after aligning on the anchor (mm) |
 | E_mpjpe | mean joint angle error (rad) |
@@ -316,10 +316,10 @@ randomization is off by default and `--randomize` turns it on, matching the way
 the paper separates its sim and sim-dr conditions.
 
 17 of the 19 selected sequences were trained to 30,000 iterations and
-evaluated over 100 rollouts. Completion rate sits next to foot error, to see
+evaluated over 100 rollouts. Success rate sits next to foot error, to see
 whether retargeting quality predicts whether the policy holds.
 
-| sequence | foot error (cm) | completion | E_g-mpbpe (mm) | E_mpbpe (mm) | E_mpjpe (rad) |
+| sequence | foot error (cm) | success rate | E_g-mpbpe (mm) | E_mpbpe (mm) | E_mpjpe (rad) |
 | --- | --- | --- | --- | --- | --- |
 | walk4_subject1 | 0.88 | 100% | 60 | 37 | 0.062 |
 | walk3_subject2 | 0.99 | 100% | 79 | 34 | 0.071 |
@@ -366,7 +366,7 @@ walk3_subject1 at 195 s, where the anchor height crosses its threshold.
 
 walk3_subject4 at 218 s, where an ankle or wrist height crosses its threshold.
 
-A 0% completion rate does not mean the policy never follows the reference. It
+A 0% success rate does not mean the policy never follows the reference. It
 follows for over three minutes and then catches on one moment. That is what the
 78% and 88% mean tracked lengths are describing.
 

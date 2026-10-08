@@ -33,8 +33,8 @@ for seq, path, ver in sorted(IGRIS, key=lambda t: (t[0], t[2])):
                 f"{f(g['e_mpbpe_mm'], '.0f')} | {f(i['e_mpbpe_mm'], '.0f')} | "
                 f"{f(g['e_mpjpe_rad'], '.3f')} | {f(i['e_mpjpe_rad'], '.3f')} |")
 
-HEAD = {"ko": "| 클립 | IGRIS 레퍼런스 | G1 완주 | IGRIS 완주 | G1 평균 생존 | IGRIS 평균 생존 | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |",
-        "en": "| Clip | IGRIS reference | G1 completion | IGRIS completion | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |"}
+HEAD = {"ko": "| 클립 | IGRIS Reference | G1 Success Rate | IGRIS Success Rate | G1 평균 생존 | IGRIS 평균 생존 | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |",
+        "en": "| Clip | IGRIS reference | G1 success rate | IGRIS success rate | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |"}
 for lang, path in (("ko", "docs/igris.md"), ("en", "docs/igris.en.md")):
     table = "\n".join([HEAD[lang], "|---|---|---|---|---|---|---|---|---|---|", *rows])
     p = os.path.join(REPO, path)

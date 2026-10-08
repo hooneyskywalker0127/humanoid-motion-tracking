@@ -24,12 +24,12 @@
 ## News
 
 - **[2026-10-02]** [IGRIS-C Retargeting에서 고친 두 곳](docs/igris.md): G1 설정을 그대로 쓰면 팔꿈치가 쭉 펴진 채 굳고, 다리를 발목까지 재면 걷는 내내 발이 바닥 아래 1.8cm에 박힙니다. 로봇을 바꿀 때 손봐야 하는 곳이 Retargeting 표입니다.
-- **[2026-10-02]** [IGRIS-C Policy](docs/igris.md#처음부터-학습-vs-g1-정책에서-옮기기): 같은 달리기 클립을 처음부터 학습한 것(Success Rate 96%)과 G1 Policy를 Any2Any 방식으로 옮긴 것(16%)을 비교했습니다. 옮긴 쪽이 초반엔 10배 빨리 배우지만 낮게 멈춥니다. 처음엔 자기 충돌 때문에 전혀 학습되지 않았습니다.
+- **[2026-10-02]** [IGRIS-C Policy](docs/igris.md#처음부터-학습-vs-g1-policy에서-옮기기): 같은 달리기 클립을 처음부터 학습한 것(Success Rate 96%)과 G1 Policy를 Any2Any 방식으로 옮긴 것(16%)을 비교했습니다. 옮긴 쪽이 초반엔 10배 빨리 배우지만 낮게 멈춥니다. 처음엔 자기 충돌 때문에 전혀 학습되지 않았습니다.
 - **[2026-10-01]** [Reward ablation](docs/reward_ablation.md): Tracking Reward 세 묶음 모두 필요합니다. Anchor 항을 빼면 표류(전역 오차 1.25m), 몸체 자세 항을 빼면 2초 만에 쓰러집니다. 전역 위치를 붙잡는 몫은 Anchor 항보다 속도 항이 더 컸습니다.
 - **[2026-09-30]** 두 번째 로봇 [IGRIS-C Retargeting](docs/igris.md). C++ 실시간 Inference 루프가 20ms 제어 예산에 10배 가까운 여유로 듭니다([견고성](docs/robustness.md)).
 - **[2026-09-29]** [모델 불일치 민감도](docs/robustness.md): 지연 한 스텝(20ms)에 Success Rate 99.9% → 29.6%. 평가 코드가 Domain Randomization을 켠 채 돌던 버그를 고쳐 비교를 바로잡았습니다. 지표 이름을 정의한 논문의 것으로 바꿨습니다.
 - **[2026-09-27]** 일반화 한계 측정: LAFAN1의 학습에 없던 63개 클립 중 Success Rate 0개.
-- **[2026-09-24]** 단일 동작 Teacher 14개를 Policy 하나로 [Distillation](docs/pipeline.md#5단계-정책-통합). 여섯 지표 전부 같거나 낫습니다.
+- **[2026-09-24]** 단일 동작 Teacher 14개를 Policy 하나로 [Distillation](docs/pipeline.md#5단계-policy-distillation). 여섯 지표 전부 같거나 낫습니다.
 - **[2026-09-14]** Teacher를 MuJoCo로 옮겨 검증([sim-to-sim](docs/sim2sim.md)). LAFAN1 밖의 동작([kobe](docs/kobe.md))도 학습.
 - **[2026-09-10]** LAFAN1 Teacher 17개 학습 완료.
 - **[2026-09-02]** 첫 Teacher. RTX 5080에서 30,000회에 8시간 38분.
@@ -80,15 +80,15 @@ rollout만 평균낸 값입니다. 지표 정의는 [GMR 논문](https://arxiv.o
 
 | 무엇 | 결과 | 자세히 |
 |---|---|---|
-| 학습한 14클립 | Success Rate 99.7% | [pipeline](docs/pipeline.md#5단계-정책-통합) |
+| 학습한 14클립 | Success Rate 99.7% | [pipeline](docs/pipeline.md#5단계-policy-distillation) |
 | 학습에 없던 LAFAN1 63클립 | **Success Rate 0개** — 일반화는 안 됩니다 | [pipeline](docs/pipeline.md#되지-않는-것도-쟀습니다) |
-| 밀치기(학습과 같은 세기) | Teacher 91.0%, Student 84.3% — 복구력은 Teacher가 낫습니다 | [pipeline](docs/pipeline.md#교란-아래에서는-전문가가-낫습니다) |
-| Domain Randomization 켠 채 | 76.1% | [pipeline](docs/pipeline.md#5단계-정책-통합) |
+| 밀치기(학습과 같은 세기) | Teacher 91.0%, Student 84.3% — 복구력은 Teacher가 낫습니다 | [pipeline](docs/pipeline.md#교란-아래에서는-teacher가-낫습니다) |
+| Domain Randomization 켠 채 | 76.1% | [pipeline](docs/pipeline.md#5단계-policy-distillation) |
 | MuJoCo로 전이 | 14개 중 12개 완주 | [sim2sim](docs/sim2sim.md) |
 | 제어 지연 1스텝(20ms) | **29.6%** — 가장 치명적 | [robustness](docs/robustness.md) |
 | 토크 ×0.7 / 질량 ×1.2 / 마찰 ×0.5 | 56.4% / 25.0% / 70.3% | [robustness](docs/robustness.md) |
-| Inference 지연 p99.9 (C++) | 1.15ms, 예산 20ms | [robustness](docs/robustness.md#실시간-추론-루프--20ms-예산-안에-드는가) |
-| IGRIS-C 처음부터 vs G1 Policy 옮기기 (run2, 1000프레임부터) | 96% vs 16% — 이 설정에선 처음부터가 이김 | [igris](docs/igris.md#처음부터-학습-vs-g1-정책에서-옮기기) |
+| Inference 지연 p99.9 (C++) | 1.15ms, 예산 20ms | [robustness](docs/robustness.md#실시간-inference-루프--20ms-예산-안에-드는가) |
+| IGRIS-C 처음부터 vs G1 Policy 옮기기 (run2, 1000프레임부터) | 96% vs 16% — 이 설정에선 처음부터가 이김 | [igris](docs/igris.md#처음부터-학습-vs-g1-policy에서-옮기기) |
 | Reward 한 묶음씩 빼기 (1만 회) | Anchor 3%, 몸체 자세 0%, 속도 55% (전부 쓴 쪽 63%) | [reward_ablation](docs/reward_ablation.md) |
 
 ## 데모
@@ -151,7 +151,7 @@ IGRIS-C에서 G1 Policy를 옮겨 쓰는 것([cross-embodiment transfer](https:/
 | sim-to-sim, C++ 루프 | MuJoCo 3.x, ONNX Runtime | `pip install mujoco onnxruntime`, C++ 빌드는 [cpp/README.md](cpp/README.md) |
 
 학습은 BeyondMimic을 로컬에서 고쳐 씁니다. 원 저장소는 Isaac Sim 4.5 / Isaac Lab 2.1
-기준이라 인터페이스 다섯 곳을 고쳤고, 고친 곳은 [docs/pipeline.md](docs/pipeline.md#4단계-모션-트래킹-정책-학습)에
+기준이라 인터페이스 다섯 곳을 고쳤고, 고친 곳은 [docs/pipeline.md](docs/pipeline.md#4단계-모션-트래킹-policy-학습)에
 적었습니다. Distillation과 평가 코드를 포함한 그 포크는 아직 공개하지 않았습니다.
 
 스크립트에 로컬 경로(`/home/sehoon/...`)가 박혀 있어 그대로 복제해 돌리기는 아직
@@ -184,7 +184,7 @@ python scripts/distill/train_student.py --headless --seqs configs/distill_seqs.t
 
 **5. 평가** — 100 rollout, Domain Randomization 끔, 클립 전체 길이.
 ```bash
-python scripts/distill/eval_student.py --headless --checkpoint <학생.pt> \
+python scripts/distill/eval_student.py --headless --checkpoint <student.pt> \
     --seqs configs/distill_seqs.txt --num_envs 100 --out eval.json
 ```
 불일치 조건은 `--action_delay 1`, `--torque_scale 0.7`, `--mass_scale 1.2` 같은 인자를 하나씩 켭니다.
@@ -201,7 +201,7 @@ python src/sim2sim_student.py walk4_subject1 --onnx student/policy.onnx --video 
 ## 폴더 구조
 
 ```
-src/        리타게팅, 지표, 렌더, 표 생성, sim-to-sim (MuJoCo)
+src/        Retargeting, 지표, 렌더, 표 생성, sim-to-sim (MuJoCo)
 scripts/    배치 실행 스크립트
   igris/    두 번째 로봇: 모델 준비, IK 표, 관절 대응
 cpp/        실시간 추론 루프(C++)와 파이썬 대조군

@@ -67,14 +67,14 @@ The same clip was learned on IGRIS-C two ways. The clip is the most dynamic of t
 `run2_subject4` (running, 2.0 m/s root speed, 245 s).
 
 - **A (from scratch):** BeyondMimic PPO on IGRIS-C from a random policy.
-- **B (transfer):** the G1 expert for the same clip (PPO), moved the
+- **B (transfer):** the G1 teacher for the same clip (PPO), moved the
   [Any2Any](https://arxiv.org/abs/2605.23733) way. Joints are mapped onto the G1 slots (no training), the
-  expert's weights are frozen, and LoRA on every actor layer and the critic hidden layers is the only thing
-  trained (rank 9, 5.0% of parameters, paper 5.26%). PPO settings are the expert's own.
+  teacher's weights are frozen, and LoRA on every actor layer and the critic hidden layers is the only thing
+  trained (rank 9, 5.0% of parameters, paper 5.26%). PPO settings are the teacher's own.
 
 Both 30,000 iterations. Evaluation: 100 rollouts, domain randomization off, final checkpoint.
 
-| Start frame | A completion | B completion | A posture error E_mpbpe | B posture error E_mpbpe |
+| Start frame | A success rate | B success rate | A posture error E_mpbpe | B posture error E_mpbpe |
 |---|---|---|---|---|
 | 0 | 21% | 0% | 59 mm | — |
 | 1000 | 96% | 16% | 59 mm | 69 mm |
@@ -85,13 +85,13 @@ Both 30,000 iterations. Evaluation: 100 rollouts, domain randomization off, fina
 iteration 100 is 12.5 for A and 172 for B, and B passes in 100 iterations what A reaches at 1,000. Then it
 stops lower. A frozen 35 kg G1 policy with a 5% low-rank correction does not seem to cover a 58 kg body with
 different leg length and motors; I have not verified this. The paper transferred a large policy trained on
-all of AMASS (SONIC); here the source is a single-clip expert. The starting policies differ in scale.
+all of AMASS (SONIC); here the source is a single-clip teacher. The starting policies differ in scale.
 
 A also manages only 21% from frame 0. Most rollouts fall in the first 20 seconds, going from standing into
 a run; skip 1000 frames and it is 96-98%. Global position error is about 1.7 m for both, accumulated drift
 over 245 s of running.
 
-The comparison is per iteration. The ~9 hours spent training the G1 expert that B starts from are not counted.
+The comparison is per iteration. The ~9 hours spent training the G1 teacher that B starts from are not counted.
 
 ### Getting IGRIS-C to learn at all
 
@@ -207,7 +207,7 @@ iterations, from scratch). Evaluation: 100 rollouts from frame 0, domain randomi
 as clips finish (`scripts/igris/results_table.py`).
 
 <!-- igris-table -->
-| Clip | IGRIS reference | G1 completion | IGRIS completion | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
+| Clip | IGRIS reference | G1 success rate | IGRIS success rate | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
 |---|---|---|---|---|---|---|---|---|---|
 | aiming1_subject1 | v1 | 100% | 100% | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
 | dance2_subject3 | v1 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |

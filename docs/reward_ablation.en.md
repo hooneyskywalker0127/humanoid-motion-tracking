@@ -21,14 +21,14 @@ regularization terms (action rate, joint limits, undesired contacts) were left a
 
 100 rollouts, domain randomization off, from frame 0 to the end of the clip.
 
-| Condition | Completion | E_g-mpbpe | E_mpbpe | E_mpjpe | Mean frames survived (/6554) |
+| Condition | Success rate | E_g-mpbpe | E_mpbpe | E_mpjpe | Mean frames survived (/6554) |
 |---|---|---|---|---|---|
 | base | 63% | 337mm | 60mm | 0.122 | 4387 |
 | no_anchor | **3%** | **1255mm** | 61mm | 0.127 | **369** |
 | no_body | **0%** | — | — | — | **91** |
 | no_vel | 55% | **956mm** | 60mm | 0.122 | 4419 |
 
-Errors are averaged over completed rollouts, so read them with completion.
+Errors are averaged over completed rollouts, so read them with success rate.
 
 **All three pairs are needed**, and each fails differently.
 
@@ -36,11 +36,11 @@ Errors are averaged over completed rollouts, so read them with completion.
   61 mm) but are 1.25 m off globally: the right pose in the wrong place.
 - **Without the body-pose terms it falls within two seconds.** The end-effector height termination fires
   first (0.42 of training episodes, base 0.18).
-- **Without the velocity terms completion holds, but global position error triples.**
+- **Without the velocity terms success rate holds, but global position error triples.**
 
 ## Two predictions were wrong
 
-**1. I expected completion to survive without the anchor terms**, since the fall check looks only at pelvis
+**1. I expected success rate to survive without the anchor terms**, since the fall check looks only at pelvis
 height, not horizontal position. It dropped to 3%. In training it lasts the full 10 s window 73% of the
 time; run from frame 0 for 131 s it falls after 7 s on average. The gap between training (10 s windows,
 random starts) and evaluation (start to end) looks like the cause, but I did not verify it.
@@ -59,8 +59,8 @@ the anchor terms.
 
 ## Limits
 
-- **The base policy is not converged either**: 63% completion at 10,000 iterations (the 30,000-iteration
-  expert, trained on a different npz, reaches 98%). So this compares **what each variant learned in the same
+- **The base policy is not converged either**: 63% success rate at 10,000 iterations (the 30,000-iteration
+  teacher, trained on a different npz, reaches 98%). So this compares **what each variant learned in the same
   10,000-iteration budget**, not converged policies. Whether the ranking holds after convergence is unknown.
 - One clip, one seed.
 

@@ -57,7 +57,7 @@ out of the last three rows.
 
 The most dynamic five seconds of `dance2_subject3`. Isaac Lab on the left, the
 same policy dropped into MuJoCo on the right. This sequence is where the two
-simulators agree most closely — 0.99 against 1.00 completion, 104.4 against
+simulators agree most closely — 0.99 against 1.00 success rate, 104.4 against
 104.3 mm global error.
 
 The rest of this section is how those numbers were produced.
@@ -98,7 +98,7 @@ solver differ. The sentence this supports is that there is no transfer loss, and
 no more than that. The comparable published figure is PHUMA appendix D.3, which
 reports 90.5 % and 93.2 % retention going from Isaac Gym to MuJoCo.
 
-Per sequence, ordered by completion rate to match the training results table
+Per sequence, ordered by success rate to match the training results table
 above.
 
 | column | meaning |
