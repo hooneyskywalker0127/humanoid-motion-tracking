@@ -23,7 +23,7 @@
 
 ## News
 
-- **[2026-10-08]** [IGRIS-C 14클립 학습](docs/igris.md) 진행 중: G1과 같은 조건(frame 0부터, 100 rollout, Domain Randomization 끔)에서 걷기 7개 모두 Success Rate 95–100%로 G1과 동등합니다. dance2는 0%로, 점프 꼭대기에서 Policy가 점프를 시도하지 않습니다(원인 미확인). Retargeting v3에서 IK 뒤집힘(52 → 4)과 발 관통을 고쳤습니다.
+- **[2026-10-08]** [IGRIS-C 14클립 학습](docs/igris.md) 진행 중: G1과 같은 조건(frame 0부터, 100 rollout, Domain Randomization 끔)에서 걷기 8개 모두 Success Rate 95–100%로 G1과 동등합니다. dance2는 0%로, 점프 꼭대기에서 Policy가 점프를 시도하지 않습니다(원인 미확인). Retargeting v3에서 IK 뒤집힘(52 → 4)과 발 관통을 고쳤습니다.
 - **[2026-10-02]** [IGRIS-C Retargeting에서 고친 두 곳](docs/igris.md): G1 설정을 그대로 쓰면 팔꿈치가 쭉 펴진 채 굳고, 다리를 발목까지 재면 걷는 내내 발이 바닥 아래 1.8cm에 박힙니다. 같은 달리기 클립을 처음부터 학습한 것과 [G1 Policy를 Any2Any 방식으로 옮긴 것](docs/igris.md#처음부터-학습-vs-g1-policy에서-옮기기)도 비교했습니다(1000프레임부터 Success Rate 96% vs 16%). 옮긴 쪽이 초반엔 10배 빨리 배우지만 낮게 멈춥니다.
 - **[2026-10-01]** [Reward ablation](docs/reward_ablation.md): Tracking Reward 세 묶음 모두 필요합니다. Anchor 항을 빼면 표류(전역 오차 1.25m), 몸체 자세 항을 빼면 2초 만에 쓰러집니다. 전역 위치를 붙잡는 몫은 Anchor 항보다 속도 항이 더 컸습니다.
 - **[2026-09-30]** 두 번째 로봇 [IGRIS-C Retargeting](docs/igris.md). C++ 실시간 Inference 루프가 20ms 제어 예산에 10배 가까운 여유로 듭니다([견고성](docs/robustness.md)).
