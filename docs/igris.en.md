@@ -214,6 +214,7 @@ as clips finish (`scripts/igris/results_table.py`).
 | dance2_subject3 | v1 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
 | dance2_subject3 | v3 | 100% | 0% | 100% | 61% | 45 | — | 0.104 | — |
 | obstacles3_subject3 | v1 | 98% | 0% | 99% | 1% | 54 | — | 0.101 | — |
+| obstacles3_subject3 | v3 | 98% | 0% | 99% | 1% | 54 | — | 0.101 | — |
 | run2_subject4 | v1 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
 | run2_subject4 | v3 | 99% | 72% | 100% | 77% | 47 | 60 | 0.111 | 0.106 |
 | walk1_subject1 | v3 | 99% | 100% | 99% | 100% | 34 | 35 | 0.066 | 0.073 |
