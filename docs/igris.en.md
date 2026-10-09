@@ -210,6 +210,7 @@ as clips finish (`scripts/igris/results_table.py`).
 | Clip | IGRIS reference | G1 success rate | IGRIS success rate | G1 mean survival | IGRIS mean survival | G1 E_mpbpe (mm) | IGRIS E_mpbpe (mm) | G1 E_mpjpe (rad) | IGRIS E_mpjpe (rad) |
 |---|---|---|---|---|---|---|---|---|---|
 | aiming1_subject1 | v1 | 100% | 100% | 100% | 100% | 35 | 36 | 0.080 | 0.091 |
+| aiming1_subject1 | v3 | 100% | 100% | 100% | 100% | 35 | 37 | 0.080 | 0.088 |
 | dance2_subject3 | v1 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
 | dance2_subject3 | v3 | 100% | 0% | 100% | 61% | 45 | — | 0.104 | — |
 | obstacles3_subject3 | v1 | 98% | 0% | 99% | 1% | 54 | — | 0.101 | — |
