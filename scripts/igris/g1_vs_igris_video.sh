@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # G1 | IGRIS-C 나란히(둘 다 프레임 0부터 끝까지) + 2배속 + 유튜브 메모를 그날 영상보관 G1vsIGRIS_<seq>/ 에 만든다.
-#   bash scripts/igris/g1_vs_igris_video.sh walk1_subject2
+#   bash scripts/igris/g1_vs_igris_video.sh walk1_subject2 [출력 폴더]
 # 배치는 261006 G1vsIGRIS_walk1_subject1/compose_g1_igris_walk1.sh 와 같다. IGRIS 쪽은 마커 없는 체인 렌더.
 set -e
 SEQ=${1:?seq}
@@ -8,7 +8,7 @@ REPO=$(cd "$(dirname "$0")/../.." && pwd)
 WBT=/home/sehoon/Projects/whole_body_tracking
 G1=$(ls /home/sehoon/Desktop/참고/영상보관/g1-motion-tracking/09/*/$SEQ/compare/${SEQ}_policy.mp4 | head -1)
 IG=$WBT/logs/igris_all/video/$SEQ.mp4
-D="/home/sehoon/Desktop/참고/영상보관/g1-motion-tracking/$(date +%m)/$(date +%y%m%d)/G1vsIGRIS_$SEQ"
+D=${2:-"/home/sehoon/Desktop/참고/영상보관/g1-motion-tracking/$(date +%m)/$(date +%y%m%d)/G1vsIGRIS_$SEQ"}  # 두 번째 인자로 출력 폴더를 바꿀 수 있다
 mkdir -p "$D"
 read G1C IGC G1E IGE DUR < <(python3 -c "
 import json,math
