@@ -11,6 +11,7 @@ import pickle
 import time
 
 import numpy as np
+import mujoco
 from general_motion_retargeting import GeneralMotionRetargeting as GMR
 from general_motion_retargeting.utils.lafan1 import load_bvh_file
 from tqdm import tqdm
@@ -29,6 +30,12 @@ parser.add_argument("--posture", type=float, default=0.0,
                     help="IK 에 직전 프레임 자세로 끄는 연속성 항(mink.PostureTask)을 이 가중치로 붙인다. "
                          "261003 IGRIS-C: 어깨 pitch·yaw 가 한 프레임에 ~1.5rad 뒤집히는 프레임이 14클립 52개 → "
                          "1.0 에서 4개. 손 추종 오차는 +4mm. 20 이상은 추종이 무뎌진다. G1 은 0 으로 그대로.")
+parser.add_argument("--posture_zero", type=float, default=0.0, help="팔 관절(shoulder/elbow/wrist)을 0 자세로 당기는 PostureTask 가중치(--posture 와 함께)")
+parser.add_argument("--posture_zero_joints", default="shoulder,elbow,wrist", help="--posture_zero 를 걸 관절 이름 조각(쉼표)")
+parser.add_argument("--ik_range", nargs=3, action="append", metavar=("JOINT", "LO", "HI"), default=[],
+                    help="IK 에서만 쓰는 관절 범위(rad). 로봇 한계 안에서 더 좁혀, 어깨가 ±π 로 감기는 등가 해를 막는다")
+parser.add_argument("--vel_limit", nargs=2, action="append", metavar=("JOINT_SUBSTR", "RAD_S"), default=[],
+                    help="IK 관절 속도 한도(--posture 와 함께). 이름에 JOINT_SUBSTR 가 든 관절의 프레임 사이 이동을 RAD_S/fps 로 묶는다. 예: --vel_limit shoulder 12 --vel_limit waist 6")
 parser.add_argument("--ground_lift", action="store_true",
                     help="IK 뒤 발바닥(발 충돌 상자)이 바닥 아래면 그만큼 몸 전체를 올린다. 0.5초 창 최대값을 가우시안으로 펴 "
                          "튐을 막는다. 261004 IGRIS-C: 발 가중치를 올려 막던 관통을 이걸로 바꾸자 점프가 부풀지 않았다 "
@@ -84,13 +91,46 @@ class GMRPosture(GMR):
     def __init__(self, *a, posture, **k):
         super().__init__(*a, **k)
         import mink
+        for name, lo, hi in args.ik_range:
+            self.model.jnt_range[mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, name)] = (float(lo), float(hi))
         self.posture = mink.PostureTask(self.model, cost=posture)
+        extra = [self.posture]
+        if args.posture_zero > 0:  # 팔 관절만 0 자세로 약하게 당긴다. 어깨가 ±π 로 감긴 등가 해(IGRIS 어깨 roll 범위 3.3rad)에 갇혔다가 한 번에 풀리는 것을 막는다
+            cost = np.zeros(self.model.nv)
+            for j in range(self.model.njnt):
+                if any(s in mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_JOINT, j) for s in args.posture_zero_joints.split(",")):
+                    cost[self.model.jnt_dofadr[j]] = args.posture_zero
+            self.posture_zero = mink.PostureTask(self.model, cost=cost)
+            self.posture_zero.set_target(np.concatenate([[0, 0, 0, 1, 0, 0, 0], np.zeros(self.model.nq - 7)]))
+            extra.append(self.posture_zero)
         for tasks, errs in ((self.tasks1, self.task_errors1), (self.tasks2, self.task_errors2)):
-            tasks.append(self.posture)
-            errs[self.posture] = []
+            for t in extra:
+                tasks.append(t)
+                errs[t] = []
+        if args.vel_limit:  # 프레임당 관절 이동을 RAD_S/fps 로 묶는다. GMR 의 use_velocity_limit 은 dt=model timestep 이라 반복 횟수에 따라 한도가 달라져 쓰지 않는다
+            # GMR 은 ik_limits 를 mink.solve_ik 의 6번째 자리(safety_break)에 넘겨 mink 가 무시하고 기본 ConfigurationLimit 만 쓴다. limits 자리로 돌려준다
+            _solve_ik = mink.solve_ik
+
+            def solve_ik(configuration, tasks, dt, solver, damping=1e-12, safety_break=False, limits=None, **kw):
+                if not isinstance(safety_break, bool):
+                    limits, safety_break = safety_break, False
+                return _solve_ik(configuration, tasks, dt, solver, damping, safety_break, limits, **kw)
+            mink.solve_ik = solve_ik
+            self.vel_box = mink.ConfigurationLimit(self.model)
+            self.jnt_lo, self.jnt_hi = self.vel_box.lower.copy(), self.vel_box.upper.copy()
+            self.vel_step = np.full(self.model.nq, np.inf)
+            for j in range(self.model.njnt):
+                for sub, rad_s in args.vel_limit:
+                    if sub in mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_JOINT, j):
+                        self.vel_step[self.model.jnt_qposadr[j]] = float(rad_s) / args.fps
+            self.ik_limits.append(self.vel_box)
 
     def retarget(self, human_data, **k):
         self.posture.set_target(self.configuration.q.copy())
+        if args.vel_limit:
+            q = self.configuration.q
+            self.vel_box.lower = np.maximum(self.jnt_lo, q - self.vel_step)
+            self.vel_box.upper = np.minimum(self.jnt_hi, q + self.vel_step)
         if args.contact_weight:  # 발이 땅에 있을 때만 발 위치 가중치를 올린다(OmniRetarget·KungfuBot 의 접촉 인식 가중치와 같은 생각)
             on, off = args.contact_weight
             for foot in ("LeftFootMod", "RightFootMod"):
