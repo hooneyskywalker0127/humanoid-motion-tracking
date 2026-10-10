@@ -33,7 +33,18 @@ parser.add_argument("--ground_lift", action="store_true",
                     help="IK 뒤 발바닥(발 충돌 상자)이 바닥 아래면 그만큼 몸 전체를 올린다. 0.5초 창 최대값을 가우시안으로 펴 "
                          "튐을 막는다. 261004 IGRIS-C: 발 가중치를 올려 막던 관통을 이걸로 바꾸자 점프가 부풀지 않았다 "
                          "(dance2 136초 점프 0.59m → 0.49m, 사람 0.47m). OmniRetarget·KungfuBot 의 접지 보정과 같은 생각.")
+parser.add_argument("--contact_weight", type=float, nargs=2, metavar=("ON", "OFF"),
+                    help="발 위치 가중치를 사람 발이 바닥 3cm 안이면 ON, 떠 있으면 OFF 로 프레임마다 바꾼다(--posture 와 함께). "
+                         "261010 IGRIS-C: 늘 높이면(v2, E3) 공중에서 발을 끌어올릴 때 골반까지 딸려 올라가 점프가 부푼다.")
+parser.add_argument("--lift_window", type=int, default=15, help="--ground_lift 의 최대값 창(프레임). 1 이면 안 씀")
+parser.add_argument("--lift_sigma", type=float, default=4, help="--ground_lift 의 가우시안 sigma(프레임). 0 이면 안 씀. "
+                    "261010: 15/4 는 착지 관통 보정을 ±0.25초로 번지게 해 이착지 앞뒤 발을 들어 올린다(jumps1 체공 1.10초)")
+parser.add_argument("--contact_threshold", type=float, default=0.03, help="--contact_weight 의 접촉 판정 높이(m, 사람 발 바닥 기준)")
+parser.add_argument("--ik_config", help="이 json 을 IK 설정으로 쓴다(GMR 의 등록 파일 대신). 스케일·가중치 실험용")
 args = parser.parse_args()
+if args.ik_config:  # motion_retarget 은 params 의 dict 객체를 그대로 쓰므로 안에서 바꾸면 된다
+    from general_motion_retargeting import params as _p
+    _p.IK_CONFIG_DICT["bvh_lafan1"][args.robot] = args.ik_config
 
 
 def ground_lift(model, qpos):
@@ -55,7 +66,9 @@ def ground_lift(model, qpos):
                       for g in boxes)
     need = np.maximum(0.0, -sole)
     out = qpos.copy()
-    out[:, 2] += np.maximum(need, gaussian_filter1d(maximum_filter1d(need, 15), 4))
+    w, sg = args.lift_window, args.lift_sigma
+    smooth = gaussian_filter1d(maximum_filter1d(need, w) if w > 1 else need, sg) if sg > 0 else need
+    out[:, 2] += np.maximum(need, smooth)
     return out
 
 
@@ -73,6 +86,13 @@ class GMRPosture(GMR):
 
     def retarget(self, human_data, **k):
         self.posture.set_target(self.configuration.q.copy())
+        if args.contact_weight:  # 발이 땅에 있을 때만 발 위치 가중치를 올린다(OmniRetarget·KungfuBot 의 접촉 인식 가중치와 같은 생각)
+            on, off = args.contact_weight
+            for foot in ("LeftFootMod", "RightFootMod"):
+                w = on if human_data[foot][0][2] < self.foot_ground + args.contact_threshold else off
+                for table in (self.human_body_to_task1, self.human_body_to_task2):
+                    if foot in table:
+                        table[foot].set_position_cost(w)
         return super().retarget(human_data, **k)
 
 os.makedirs(args.dst, exist_ok=True)
@@ -93,6 +113,7 @@ for path in files:
         if args.posture > 0:
             retargeter = GMRPosture(src_human="bvh_lafan1", tgt_robot=args.robot,
                                     actual_human_height=human_height, posture=args.posture)
+            retargeter.foot_ground = float(np.percentile([min(f["LeftFootMod"][0][2], f["RightFootMod"][0][2]) for f in frames], 5))
         else:
             retargeter = GMR(src_human="bvh_lafan1", tgt_robot=args.robot,
                              actual_human_height=human_height)
