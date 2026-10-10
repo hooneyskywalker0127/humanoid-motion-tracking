@@ -1,6 +1,8 @@
 """리타게팅 설정 실험(outputs/retarget_igris_exp/*)을 사람·G1 과 같은 잣대로 잰다.
 
-    python scripts/igris/ref_variant_eval.py outputs/retarget_igris outputs/retarget_igris_exp/E1_scale095 ...
+    python scripts/igris/ref_variant_eval.py outputs/retarget_igris outputs/retarget_igris_exp/E1_scale095 robotis_k1:outputs/retarget_k1 ...
+
+인자는 pkl 폴더. `로봇:폴더` 로 로봇을 지정할 수 있고(기본 igris_c), 클립은 마지막 폴더의 pkl 로 정한다.
 
 클립마다: 두 발이 모두 바닥 3cm 위에 뜬 프레임 비율(float), 발 관통 p1(cm), 서 있는 첫 3초 hip_roll(°),
 골반 최저 높이(서 있는 높이 대비), 점프 체공(두 발 공중 구간 중 가장 긴 것, 초). 사람 BVH 와 G1 레퍼런스도 같은 줄에.
@@ -12,6 +14,7 @@ from general_motion_retargeting.utils.lafan1 import load_bvh_file
 
 FPS = 30
 FEET = {"igris_c": (("l_foot_original", "r_foot_original"), ("l_hip_roll", "r_hip_roll")),
+        "robotis_k1": (("left_ankle_roll_link", "right_ankle_roll_link"), ("left_hip_roll_joint", "right_hip_roll_joint")),
         "unitree_g1": (("left_ankle_roll_link", "right_ankle_roll_link"), ("left_hip_roll_joint", "right_hip_roll_joint"))}
 
 
@@ -53,13 +56,13 @@ def human_stats(seq):
 
 
 fmt = lambda s: f"float {s['float']:.3f}  pen {s['pen']:+5.1f}cm  hiproll {s['hiproll']:4.1f}°  rootmin {s['rootmin']:.2f}  air {s['air']:.2f}s"
-dirs = sys.argv[1:]
-seqs = sorted(os.path.basename(p)[:-4] for p in glob.glob(f"{dirs[-1]}/*.pkl"))
+dirs = [(a.split(":", 1) if ":" in a else ("igris_c", a)) for a in sys.argv[1:]]
+seqs = sorted(os.path.basename(p)[:-4] for p in glob.glob(f"{dirs[-1][1]}/*.pkl"))
 for seq in seqs:
     print(f"== {seq}")
     print(f"  {'human':14s} {fmt(human_stats(seq))}")
     print(f"  {'G1':14s} {fmt(robot_stats('unitree_g1', f'outputs/retarget/{seq}.pkl'))}")
-    for dd in dirs:
+    for robot, dd in dirs:
         p = f"{dd}/{seq}.pkl"
         if os.path.exists(p):
-            print(f"  {os.path.basename(dd.rstrip('/')):14s} {fmt(robot_stats('igris_c', p))}")
+            print(f"  {os.path.basename(dd.rstrip('/')):14s} {fmt(robot_stats(robot, p))}")

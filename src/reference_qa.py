@@ -16,6 +16,7 @@
   vel_over    관절 속도가 학습 설정의 속도 한계를 넘는 프레임 비율과 가장 큰 배율
   tau_over    필요한 관절 토크가 학습 설정의 토크 한계를 넘는 프레임 비율과 가장 큰 배율
   residual    접촉으로 설명되지 않는 루트 힘의 95백분위 / 체중. 크면 레퍼런스 자체가 물리적으로 불가능한 가속이다
+  com_out     접촉 프레임 중 무게중심 xy 가 발바닥 지지 다각형 밖 2cm 이상인 비율(PHUMA·R1 Pro 식 정적 안정 검사), p95 는 그 거리(cm)
 
 한계값은 정책이 실제로 쓰는 Isaac 학습 설정(robots/igris.py, g1.py)과 같다. IGRIS 속도 한계는 그 파일에서도
 가정값이다(공개 URDF 는 자리값 100). 자기 충돌은 재지 않는다 — IGRIS 벤더 메시가 설계상 겹쳐 학습에서도 껐다.
@@ -36,12 +37,14 @@ LIMITS = {  # (관절 정규식, 토크 Nm, 속도 rad/s) — 학습 설정과 �
     "igris_c": [(r".*_hip_pitch", 150, 20), (r".*_knee_pitch", 150, 20), (r".*_hip_roll", 120, 20),
                 (r".*_hip_yaw", 60, 37), (r".*_ankle_.*", 90, 32), (r"waist_.*", 60, 37),
                 (r".*_shoulder_.*|.*_elbow_pitch", 60, 37), (r".*_wrist_.*", 8, 22), (r"neck_.*", 7, 10)],
+    "robotis_k1": [(r".*_(hip_.*|knee|ankle_pitch)_joint", 96.9, 20), (r".*_ankle_roll_joint", 47.3, 32), (r"waist_yaw_joint", 96.9, 32),
+                   (r".*_(shoulder_.*|elbow|wrist_roll)_joint", 47.3, 37)],  # 공개 MJCF actuator ctrlrange, 속도는 G1 처럼 가정
     "unitree_g1": [(r".*_hip_yaw_joint", 88, 32), (r".*_hip_roll_joint", 139, 20), (r".*_hip_pitch_joint", 88, 32),
                    (r".*_knee_joint", 139, 20), (r".*_ankle_.*", 50, 37), (r"waist_(roll|pitch)_joint", 50, 37),
                    (r"waist_yaw_joint", 88, 32), (r".*_shoulder_.*|.*_elbow_joint", 25, 37),
                    (r".*_wrist_roll_joint", 25, 37), (r".*_wrist_(pitch|yaw)_joint", 5, 22)],
 }
-FEET = {"igris_c": ("l_foot_original", "r_foot_original"),
+FEET = {"igris_c": ("l_foot_original", "r_foot_original"), "robotis_k1": ("left_ankle_roll_link", "right_ankle_roll_link"),
         "unitree_g1": ("left_ankle_roll_link", "right_ankle_roll_link")}
 
 parser = argparse.ArgumentParser()
@@ -111,6 +114,17 @@ def contact_split(qfrc):
     return rest[6:], np.linalg.norm(rest[:3])
 
 
+def hull_dist(pts, c):
+    """점 c 가 pts 의 볼록껍질 밖이면 껍질까지 거리, 안이면 0."""
+    from scipy.spatial import ConvexHull
+    try:
+        h = ConvexHull(pts)
+    except Exception:
+        return float(np.min(np.linalg.norm(pts - c, axis=1)))
+    d = h.equations[:, :2] @ c + h.equations[:, 2]  # 바깥이 양수
+    return float(max(0.0, d.max()))
+
+
 def qa(path):
     r = pickle.load(open(path, "rb"))
     q = np.concatenate([r["root_pos"], r["root_rot"][:, [3, 0, 1, 2]], r["dof_pos"]], 1)
@@ -129,11 +143,14 @@ def qa(path):
     for t in range(0, T, 3):
         data.qpos[:] = q[t]; mujoco.mj_kinematics(model, data); lows0.append(min(geom_low(g) for g in foot_geoms))
     GROUND[0] = float(np.percentile(lows0, 5))
-    tau = np.zeros((T, model.nv - 6)); res = np.zeros(T); low = np.zeros(T); skate = []
+    tau = np.zeros((T, model.nv - 6)); res = np.zeros(T); low = np.zeros(T); skate = []; com_out = []
     for t in range(T):
         data.qpos[:] = q[t]; data.qvel[:] = v[t]; data.qacc[:] = acc[t]
         mujoco.mj_inverse(model, data)
         tau[t], res[t] = contact_split(data.qfrc_inverse.copy())
+        pts = [p[:2] for p, _ in sole_points()]
+        if len(pts) >= 3:  # 접촉 프레임만: 무게중심 xy 가 지지 다각형 밖이면 그 거리(m)
+            mujoco.mj_comPos(model, data); com_out.append(hull_dist(np.array(pts), data.subtree_com[1][:2]))
         lows = [geom_low(g) for g in foot_geoms]; low[t] = min(lows)
         for b in foot_bodies:
             gb = [g for g in foot_geoms if model.geom_bodyid[g] == b]
@@ -156,7 +173,9 @@ def qa(path):
                 tau_over=f"{(tr > 1).any(1).mean():.3f}", tau_max=f"{tr.max():.2f}", tau_joint=worst(tr),
                 tau_p99=f"{np.percentile(tr.max(1), 99):.2f}",
                 residual_med=f"{np.median(res) / (mass * 9.81):.2f}", residual_p95=f"{np.percentile(res, 95) / (mass * 9.81):.2f}",
-                ground_cm=f"{GROUND[0] * 100:.1f}", **grp)
+                ground_cm=f"{GROUND[0] * 100:.1f}",
+                com_out=f"{np.mean(np.array(com_out) > 0.02) if com_out else float('nan'):.3f}",  # 접촉 프레임 중 무게중심이 지지 다각형 밖 2cm 이상
+                com_out_p95=f"{np.percentile(com_out, 95) * 100 if com_out else float('nan'):.1f}", **grp)
 
 
 paths = [os.path.join(args.pkl, f"{s}.pkl") for s in args.seq] if args.seq else sorted(glob.glob(f"{args.pkl}/*.pkl"))

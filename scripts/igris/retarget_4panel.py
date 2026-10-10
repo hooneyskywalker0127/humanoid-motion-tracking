@@ -16,6 +16,9 @@ ap.add_argument("--seconds", type=float, default=60)
 ap.add_argument("--out", required=True)
 ap.add_argument("--fps", type=int, default=30)
 ap.add_argument("--panel", type=int, nargs=2, default=(480, 1080))
+ap.add_argument("--start", type=float, default=0, help="시작 초")
+ap.add_argument("--panels", nargs="*", help="패널 지정 '로봇:pkl폴더:자막' (human 은 'human::자막'). 기본은 G1|사람|IGRIS|K1")
+ap.add_argument("--title", default=None)
 args = ap.parse_args()
 W, H = args.panel
 # (로봇, pkl, 자막, 보이는 geom group) — 충돌 메시는 숨긴다(G1·IGRIS 시각 메시는 group 1, K1 은 group 2)
@@ -24,6 +27,12 @@ PANELS = [("unitree_g1", "outputs/retarget/%s.pkl", "Unitree G1  1.32 m / 35 kg"
           ("igris_c", "outputs/retarget_igris/%s.pkl", "IGRIS-C  1.5 m / 58 kg", 1),
           ("robotis_k1", "outputs/retarget_k1/%s.pkl", "ROBOTIS AI Sapiens K1  1.2 m / 36 kg", 2)]
 GRAY = np.array([0.42, 0.42, 0.44, 1.0], dtype=np.float32)
+GROUP = {"unitree_g1": 1, "igris_c": 1, "robotis_k1": 2}
+if args.panels:
+    PANELS = []
+    for spec in args.panels:
+        robot, pkl, lab = spec.split(":", 2)
+        PANELS.append((None, None, lab, 0) if robot == "human" else (robot, pkl + "/%s.pkl", lab, GROUP[robot]))
 BONES = [("Hips", "Spine"), ("Spine", "Spine1"), ("Spine1", "Spine2"), ("Spine2", "Neck"), ("Neck", "Head"),
          ("Spine2", "LeftShoulder"), ("LeftShoulder", "LeftArm"), ("LeftArm", "LeftForeArm"), ("LeftForeArm", "LeftHand"),
          ("Spine2", "RightShoulder"), ("RightShoulder", "RightArm"), ("RightArm", "RightForeArm"), ("RightForeArm", "RightHand"),
@@ -31,9 +40,9 @@ BONES = [("Hips", "Spine"), ("Spine", "Spine1"), ("Spine1", "Spine2"), ("Spine2"
          ("Hips", "RightUpLeg"), ("RightUpLeg", "RightLeg"), ("RightLeg", "RightFoot"), ("RightFoot", "RightToe")]
 ORANGE = np.array([0.95, 0.55, 0.1, 1.0], dtype=np.float32)
 
-n = int(args.seconds * args.fps)
+n = int(args.seconds * args.fps); s0 = int(args.start * args.fps)
 frames, _ = load_bvh_file(f"/home/sehoon/data/lafan1/{args.seq}.bvh", format="lafan1")
-frames = frames[:n]
+frames = frames[s0:s0 + n]
 
 
 def camera():
@@ -66,7 +75,7 @@ class RobotPanel:
         self.m = mujoco.MjModel.from_xml_path(str(ROBOT_XML_DICT[robot])); self.d = mujoco.MjData(self.m)
         self.opt = uniform(self.m, group)
         r = pickle.load(open(pkl, "rb"))
-        self.q = np.concatenate([r["root_pos"], r["root_rot"][:, [3, 0, 1, 2]], r["dof_pos"]], 1)[:n]
+        self.q = np.concatenate([r["root_pos"], r["root_rot"][:, [3, 0, 1, 2]], r["dof_pos"]], 1)[s0:s0 + n]
         self.ren = mujoco.Renderer(self.m, height=H, width=W); self.cam = camera()
 
     def frame(self, t):
@@ -112,7 +121,7 @@ B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"; R = "/usr/share/font
 labels = ",".join(f"drawtext=fontfile={R}:text='{lab}':fontsize=22:fontcolor={'0xf0a050' if r is None else 'white'}:x={i * W}+({W}-tw)/2:y=h-50" for i, (r, _, lab, _) in enumerate(PANELS))
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-vf",
                 f"drawbox=x=0:y=0:w=iw:h=56:color=black@0.85:t=fill,drawbox=x=0:y=ih-70:w=iw:h=70:color=black@0.85:t=fill,"
-                f"drawtext=fontfile={B}:text='Same LAFAN1 clip, three humanoids  ·  {args.seq}  ·  GMR retargeting':fontsize=30:fontcolor=white:x=24:y=13,"
-                f"drawtext=fontfile={R}:text='%{{eif\\:t\\:d}}.%{{eif\\:mod(t*10\\,10)\\:d}} s':fontsize=24:fontcolor=0xc8c8c8:x=w-tw-24:y=16,{labels}",
+                f"drawtext=fontfile={B}:text='{args.title or f'Same LAFAN1 clip, three humanoids  ·  {args.seq}  ·  GMR retargeting'}':fontsize=30:fontcolor=white:x=24:y=13,"
+                f"drawtext=fontfile={R}:text='%{{eif\\:t+{args.start}\\:d}}.%{{eif\\:mod((t+{args.start})*10\\,10)\\:d}} s':fontsize=24:fontcolor=0xc8c8c8:x=w-tw-24:y=16,{labels}",
                 "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", args.out], check=True)
 os.remove(raw); print(args.out)

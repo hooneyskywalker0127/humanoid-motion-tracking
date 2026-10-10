@@ -54,16 +54,21 @@ def ground_lift(model, qpos):
     from scipy.ndimage import gaussian_filter1d, maximum_filter1d
     data = mujoco.MjData(model)
     signs = np.array(list(itertools.product([-1, 1], repeat=3)))
-    boxes = [g for g in range(model.ngeom)
-             if model.geom_type[g] == mujoco.mjtGeom.mjGEOM_BOX and model.geom_contype[g]
-             and "foot" in mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, model.geom_bodyid[g])]
-    assert boxes, "발 충돌 상자를 못 찾았다"
+    # 발 충돌 형상: IGRIS 는 *_foot_* 몸체의 상자, G1·K1 은 *_ankle_roll_link 의 상자·구
+    feet = [g for g in range(model.ngeom) if model.geom_contype[g]
+            and int(model.geom_type[g]) in (int(mujoco.mjtGeom.mjGEOM_BOX), int(mujoco.mjtGeom.mjGEOM_SPHERE), int(mujoco.mjtGeom.mjGEOM_CAPSULE))
+            and any(k in mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, model.geom_bodyid[g]) for k in ("foot", "ankle_roll"))]
+    assert feet, "발 충돌 형상을 못 찾았다"
+
+    def low(g):
+        if int(model.geom_type[g]) == int(mujoco.mjtGeom.mjGEOM_BOX):
+            return ((data.geom_xpos[g] + (signs * model.geom_size[g]) @ data.geom_xmat[g].reshape(3, 3).T)[:, 2]).min()
+        return data.geom_xpos[g][2] - model.geom_size[g][0]
     sole = np.empty(len(qpos))
     for t, q in enumerate(qpos):
         data.qpos[:] = q
         mujoco.mj_kinematics(model, data)
-        sole[t] = min(((data.geom_xpos[g] + (signs * model.geom_size[g]) @ data.geom_xmat[g].reshape(3, 3).T)[:, 2]).min()
-                      for g in boxes)
+        sole[t] = min(low(g) for g in feet)
     need = np.maximum(0.0, -sole)
     out = qpos.copy()
     w, sg = args.lift_window, args.lift_sigma
