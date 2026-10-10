@@ -48,7 +48,7 @@ frames = frames[s0:s0 + n]
 def camera():
     cam = mujoco.MjvCamera()
     cam.type = mujoco.mjtCamera.mjCAMERA_FREE
-    cam.lookat[:] = (0, 0, 0.8); cam.distance = 3.4; cam.elevation = -10; cam.azimuth = 135
+    cam.lookat[:] = (0, 0, 0.85); cam.distance = 4.0; cam.elevation = -10; cam.azimuth = 135  # 3.4 에서는 팔끝이 패널 가장자리에 잘렸다
     return cam
 
 
