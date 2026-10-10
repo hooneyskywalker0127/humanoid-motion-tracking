@@ -23,6 +23,7 @@
 
 ## News
 
+- **[2026-10-10]** IGRIS-C 14클립 학습을 마쳤습니다(frame 0부터, 100 rollout). 걷기 9개와 aiming1은 Success Rate 95–100%로 G1과 동등하고, 나머지는 jumps1 74%, run2 72%, dance2 0%, obstacles3 0%입니다(G1 98–100%). obstacles3는 서 있는 시작 자세부터 고관절 토크가 한계를 넘고, jumps1 Reference는 점프 체공이 1.10초(사람 0.43초)입니다.
 - **[2026-10-09]** IGRIS-C 걷기 9개가 모두 끝났고 Success Rate 95–100%로 G1과 동등합니다. aiming1 100%(G1 100%), run2 72%(G1 99%)입니다. 막히는 구간을 G1·사람과 비교하면 IGRIS-C Reference가 발을 더 자주·오래 띄우고(run2), 기어가는 자세에서 바닥까지 내려가지 않습니다(obstacles3). 같은 조건(frame 0부터, 100 rollout)입니다.
 - **[2026-10-08]** [IGRIS-C 14클립 학습](docs/igris.md) 진행 중: G1과 같은 조건(frame 0부터, 100 rollout, Domain Randomization 끔)에서 걷기 8개 모두 Success Rate 95–100%로 G1과 동등합니다. dance2는 0%로, 점프 꼭대기에서 Policy가 점프를 시도하지 않습니다(원인 미확인). Retargeting v3에서 IK 뒤집힘(52 → 4)과 발 관통을 고쳤습니다.
 - **[2026-10-02]** [IGRIS-C Retargeting에서 고친 두 곳](docs/igris.md): G1 설정을 그대로 쓰면 팔꿈치가 쭉 펴진 채 굳고, 다리를 발목까지 재면 걷는 내내 발이 바닥 아래 1.8cm에 박힙니다. 같은 달리기 클립을 처음부터 학습한 것과 [G1 Policy를 Any2Any 방식으로 옮긴 것](docs/igris.md#처음부터-학습-vs-g1-policy에서-옮기기)도 비교했습니다(1000프레임부터 Success Rate 96% vs 16%). 옮긴 쪽이 초반엔 10배 빨리 배우지만 낮게 멈춥니다.
@@ -116,7 +117,7 @@ rollout만 평균낸 값입니다. 지표 정의는 [GMR 논문](https://arxiv.o
 | 로봇 | 자유도 | 키 / 무게 | Retargeting | Teacher 학습 | Distillation | sim-to-sim |
 |---|---|---|---|---|---|---|
 | Unitree G1 | 29 | 1.32m / 35kg | ✅ LAFAN1 77개 | ✅ 14개 | ✅ 14 → 1 | ✅ MuJoCo |
-| [IGRIS-C](https://github.com/robrosinc/igris_c_description_public) | 31 | 1.5m / 58kg | ✅ 14개 | ✅ 13개 (14개 학습 중) | — | — |
+| [IGRIS-C](https://github.com/robrosinc/igris_c_description_public) | 31 | 1.5m / 58kg | ✅ 14개 | ✅ 14개 | — | — |
 
 ![igris_transfer](docs/igris_transfer.png)
 

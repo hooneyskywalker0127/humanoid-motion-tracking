@@ -24,6 +24,7 @@ tracking) end to end.
 
 ## News
 
+- **[2026-10-10]** Finished training IGRIS-C on all 14 clips (from frame 0, 100 rollouts). The nine walking clips and aiming1 reach a 95–100% success rate, on par with the G1; the rest are jumps1 74%, run2 72%, dance2 0% and obstacles3 0% (G1 98–100%). In obstacles3 the standing start already needs hip torque above the limit, and the jumps1 reference stays airborne 1.10 s in a jump the human makes in 0.43 s.
 - **[2026-10-09]** All nine IGRIS-C walking clips are done, at a 95–100% success rate, on par with the G1. aiming1 is at 100% (G1 100%) and run2 at 72% (G1 99%). Where training stalls, the IGRIS-C reference lifts the feet more often and for longer than the human and the G1 (run2) and does not get down to the floor in the crawl (obstacles3). Same conditions: from frame 0, 100 rollouts.
 - **[2026-10-08]** [IGRIS-C 14-clip training](docs/igris.en.md) in progress: under the same conditions as the G1 (from frame 0, 100 rollouts, domain randomization off) all eight walking clips finished so far reach a 95–100% success rate, on par with the G1. dance2 is at 0%: at the top of the tuck jump the policy does not attempt the jump (cause not confirmed). Retargeting v3 fixed IK flips (52 → 4) and foot penetration.
 - **[2026-10-02]** [Two fixes in the IGRIS-C retargeting](docs/igris.en.md): with the G1 settings the elbows lock straight, and measuring the legs to the ankle sinks the feet 1.8 cm into the floor for the whole walk. Also compared the same running clip trained from scratch against [the G1 policy transferred the Any2Any way](docs/igris.en.md#training-from-scratch-vs-transferring-the-g1-policy) (from frame 1000: 96% vs 16% success rate). Transfer learns ten times faster early on but stops lower.
@@ -117,7 +118,7 @@ Full videos: [full clip](https://youtu.be/l1M4y_Nl7oc) · [training progression]
 | Robot | DoF | Height / mass | Retargeting | Teachers | Consolidation | sim-to-sim |
 |---|---|---|---|---|---|---|
 | Unitree G1 | 29 | 1.32 m / 35 kg | ✅ 77 LAFAN1 clips | ✅ 14 | ✅ 14 → 1 | ✅ MuJoCo |
-| [IGRIS-C](https://github.com/robrosinc/igris_c_description_public) | 31 | 1.5 m / 58 kg | ✅ 14 clips | ✅ 13 (14 in training) | — | — |
+| [IGRIS-C](https://github.com/robrosinc/igris_c_description_public) | 31 | 1.5 m / 58 kg | ✅ 14 clips | ✅ 14 | — | — |
 
 ![igris_transfer](docs/igris_transfer.png)
 
