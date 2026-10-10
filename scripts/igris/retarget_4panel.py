@@ -118,12 +118,12 @@ for t in range(n):
 w.close()
 
 B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"; R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-esc = lambda t: t.replace("\\", "\\\\").replace("%", "%%").replace(":", "\\:").replace("'", "\\'")  # drawtext 의 특수문자(%, :, ')
+esc = lambda t: t.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")  # 필터그래프 특수문자(:, '). % 는 expansion=none 으로 그대로
 title = esc(args.title or f"Same LAFAN1 clip, three humanoids  ·  {args.seq}  ·  GMR retargeting")
-labels = ",".join(f"drawtext=fontfile={R}:text='{esc(lab)}':fontsize=22:fontcolor={'0xf0a050' if r is None else 'white'}:x={i * W}+({W}-tw)/2:y=h-50" for i, (r, _, lab, _) in enumerate(PANELS))
+labels = ",".join(f"drawtext=fontfile={R}:text='{esc(lab)}':expansion=none:fontsize=22:fontcolor={'0xf0a050' if r is None else 'white'}:x={i * W}+({W}-tw)/2:y=h-50" for i, (r, _, lab, _) in enumerate(PANELS))
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-vf",
                 f"drawbox=x=0:y=0:w=iw:h=56:color=black@0.85:t=fill,drawbox=x=0:y=ih-70:w=iw:h=70:color=black@0.85:t=fill,"
-                f"drawtext=fontfile={B}:text='{title}':fontsize=30:fontcolor=white:x=24:y=13,"
+                f"drawtext=fontfile={B}:text='{title}':expansion=none:fontsize=30:fontcolor=white:x=24:y=13,"
                 f"drawtext=fontfile={R}:text='%{{eif\\:t+{args.start}\\:d}}.%{{eif\\:mod((t+{args.start})*10\\,10)\\:d}} s':fontsize=24:fontcolor=0xc8c8c8:x=w-tw-24:y=16,{labels}",
                 "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", args.out], check=True)
 os.remove(raw); print(args.out)
