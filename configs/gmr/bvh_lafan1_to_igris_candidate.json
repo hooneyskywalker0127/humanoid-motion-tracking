@@ -1,19 +1,19 @@
 {
  "robot_root_name": "pelvis",
  "human_root_name": "Hips",
- "ground_height": 0.0,
+ "ground_height": 0.03,
  "human_height_assumption": 1.8,
  "use_ik_match_table1": true,
  "use_ik_match_table2": true,
  "human_scale_table": {
-  "Hips": 1.01,
+  "Hips": 0.9,
   "Spine2": 1.0,
-  "LeftUpLeg": 1.01,
-  "RightUpLeg": 1.01,
-  "LeftLeg": 1.01,
-  "RightLeg": 1.01,
-  "LeftFootMod": 1.01,
-  "RightFootMod": 1.01,
+  "LeftUpLeg": 0.9,
+  "RightUpLeg": 0.9,
+  "LeftLeg": 0.9,
+  "RightLeg": 0.9,
+  "LeftFootMod": 0.9,
+  "RightFootMod": 0.9,
   "LeftArm": 0.82,
   "RightArm": 0.82,
   "LeftForeArm": 0.82,
@@ -250,7 +250,7 @@
  "ik_match_table2": {
   "pelvis": [
    "Hips",
-   20,
+   100,
    200,
    [
     0.0,
