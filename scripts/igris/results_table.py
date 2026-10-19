@@ -21,15 +21,22 @@ IGRIS = [("run2_subject4", f"{WBT}/igris_transfer/eval_a_29999.json", "v1")]
 IGRIS += [(os.path.basename(p)[5:-5], p, "v1") for p in glob.glob(f"{WBT}/igris_all/v1ref/eval_*.json")]
 IGRIS += [(os.path.basename(p)[5:-5], p, "v1" if os.path.basename(p)[5:-5] in V1_IN_PLACE else "v3")
           for p in glob.glob(f"{WBT}/igris_all/eval_*.json")]
+# E31(261016) = v3 + 몸통 회전 가중치 200 + 팔 속도 한도 8 rad/s(허우적거림 제거), 다리 스케일 1.01 — dance2 0%.
+# v4(261017~) = GMR 논문대로(pelvis 위치 100, 프레임별 접지, 다리·골반 스케일 0.90, ground_height 0.03) + 접촉 게이팅 100/20
+#   + 몸통 회전 200 + 팔 속도 한도 8. server_loop.sh 가 logs/server_igris_<ref>/eval_<seq>.json 에 남긴다.
+IGRIS += [(os.path.basename(p)[5:-5], p, "E31") for p in glob.glob(f"{WBT}/server_igris_e31/eval_*.json")]
+IGRIS += [(os.path.basename(p)[5:-5], p, "v4") for p in glob.glob(f"{WBT}/server_igris_s90/eval_*.json")]
+ORDER = {"v1": 0, "v2": 1, "v3": 2, "E31": 3, "v4": 4}
+FOOTNOTE = {("obstacles3_subject3", "v4"): "¹"}  # 무릎 가동 범위 131° 밖(사람 요구각 초과 프레임 4.1%): 운동학적으로 불가능한 구간
 
 rows = []
-for seq, path, ver in sorted(IGRIS, key=lambda t: (t[0], t[2])):
+for seq, path, ver in sorted(IGRIS, key=lambda t: (t[0], ORDER[t[2]])):
     i = json.load(open(path))
     g = json.load(open(f"{REPO}/outputs/eval/{seq}.json"))
     # 완주가 0이면 오차는 정의되지 않는다(완주한 롤아웃에서만 잰다). 대신 평균 생존 비율로 어디까지 갔는지 본다.
     f = lambda v, fmt: "—" if v != v else format(v, fmt)
     alive = lambda d: d["mean_alive_frames"] / d["motion_frames"]
-    rows.append(f"| {seq} | {ver} | {g['success_rate']:.0%} | {i['success_rate']:.0%} | {alive(g):.0%} | {alive(i):.0%} | "
+    rows.append(f"| {seq} | {ver} | {g['success_rate']:.0%} | {i['success_rate']:.0%}{FOOTNOTE.get((seq, ver), '')} | {alive(g):.0%} | {alive(i):.0%} | "
                 f"{f(g['e_mpbpe_mm'], '.0f')} | {f(i['e_mpbpe_mm'], '.0f')} | "
                 f"{f(g['e_mpjpe_rad'], '.3f')} | {f(i['e_mpjpe_rad'], '.3f')} |")
 

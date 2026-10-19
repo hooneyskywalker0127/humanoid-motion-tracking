@@ -200,7 +200,7 @@ and IGRIS-C needs 106% of the waist limit just to **stand still** in that postur
 knees or hips bend, the waist moment is the same while the torso is tilted, so retargeting cannot avoid
 it. This is recorded as a prediction before training, to be checked against the result.
 
-## All 14 clips from scratch (in progress)
+## All 14 clips from scratch
 
 IGRIS-C is being trained on the same 14 clips as the G1 teachers, the same way (BeyondMimic PPO, 30,000
 iterations, from scratch). Evaluation: 100 rollouts from frame 0, domain randomization off. Rows are added
@@ -213,9 +213,12 @@ as clips finish (`scripts/igris/results_table.py`).
 | aiming1_subject1 | v3 | 100% | 100% | 100% | 100% | 35 | 37 | 0.080 | 0.088 |
 | dance2_subject3 | v1 | 100% | 0% | 100% | 60% | 45 | — | 0.104 | — |
 | dance2_subject3 | v3 | 100% | 0% | 100% | 61% | 45 | — | 0.104 | — |
+| dance2_subject3 | E31 | 100% | 0% | 100% | 61% | 45 | — | 0.104 | — |
+| dance2_subject3 | v4 | 100% | 100% | 100% | 100% | 45 | 48 | 0.104 | 0.110 |
 | jumps1_subject1 | v3 | 98% | 74% | 99% | 78% | 42 | 53 | 0.104 | 0.104 |
 | obstacles3_subject3 | v1 | 98% | 0% | 99% | 1% | 54 | — | 0.101 | — |
 | obstacles3_subject3 | v3 | 98% | 0% | 99% | 1% | 54 | — | 0.101 | — |
+| obstacles3_subject3 | v4 | 98% | 81%¹ | 99% | 81% | 54 | 44 | 0.101 | 0.105 |
 | run2_subject4 | v1 | 99% | 21% | 100% | 22% | 47 | 59 | 0.111 | 0.105 |
 | run2_subject4 | v3 | 99% | 72% | 100% | 77% | 47 | 60 | 0.111 | 0.106 |
 | walk1_subject1 | v3 | 99% | 100% | 99% | 100% | 34 | 35 | 0.066 | 0.073 |
@@ -228,6 +231,22 @@ as clips finish (`scripts/igris/results_table.py`).
 | walk3_subject5 | v3 | 100% | 100% | 100% | 100% | 36 | 44 | 0.082 | 0.106 |
 | walk4_subject1 | v3 | 100% | 100% | 100% | 100% | 37 | 27 | 0.062 | 0.067 |
 <!-- /igris-table -->
+
+¹ Outside the IGRIS-C knee range of motion (131°). The human knee demand exceeds 131° in 4.1% of obstacles3 frames (K1 135°: 3.9%, G1 170°: 0%),
+so the crawl is kinematically infeasible. Following common practice (GMR, GMT and SONIC exclude crawls or report the failure as is), the training
+conditions are unchanged and the number stays with this footnote. The remaining option is a reference edit: hard-clamp the knee and recompute pelvis height (SafeFlow, GenTrack).
+
+### Retargeting v4 — human-sized jumps (dance2 0% → 100%)
+
+E31 (v3 + trunk rotation weight 200 + arm velocity limit) removed the flailing but dance2 stayed at 0%. The trained policy's torque log showed no
+saturation, and 99 of 100 rollouts ended at the same frame (137.9 s) on the anchor-height termination. The reference demanded bigger jumps than the
+human or the G1 (pelvis apex +0.38–0.41 m vs human +0.33, G1 +0.30; seven to eight flight phases ≥0.3 s around the jump vs one for the G1).
+Two things I had added on top of GMR inflated them: the stage-2 pelvis weight of 20 and the ground correction smoothed over a 0.5 s window.
+
+v4 reverts to the GMR paper (pelvis position weight 100, per-frame grounding, constant ground_height 0.03, leg and pelvis scale 1.01 → 0.90) and adds
+only contact gating 100/20 (human foot within 8 cm), trunk rotation 200 and an arm velocity limit of 8 rad/s. dance2 100% (E_mpbpe 48 mm, G1 45),
+obstacles3 81%¹ (v3 0%). The same recipe on the K1 (trunk 100, arm 10) is in [docs/k1.md](k1.md); the generic procedure distilled from this is
+[docs/new-robot.md](new-robot.md), whose scorecard marks E31 "fail (air +0.09, apex +0.07)" and v4 "pass".
 
 walk1_subject2 was OOM-killed at iteration 27,441 and resumed from model_27000 to 30,000 (resuming resets only the adaptive sampler state). walk1_subject5 was resumed from 15,000 after a reboot.
 

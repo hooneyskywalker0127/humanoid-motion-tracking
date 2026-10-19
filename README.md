@@ -23,6 +23,10 @@
 
 ## News
 
+- **[2026-10-19]** 세 번째 로봇 [ROBOTIS AI Sapiens K1](docs/k1.md)과 IGRIS-C의 obstacles3: K1 94%(G1 98%), IGRIS-C 81%(v3 0%). IGRIS-C의 남은 19%는 무릎 가동 범위 131° 밖(사람 요구각 초과 프레임 4.1%)이라 운동학적으로 불가능한 구간으로 각주 처리했습니다. 두 로봇을 올리며 한 일을 [새 로봇 추가 절차](docs/new-robot.md)로 묶었습니다: MJCF 하나로 GMR IK 설정 자동 생성(손으로 만든 표를 그대로 재현), 학습 전 Reference 채점표(dance2 0%였던 Reference는 탈락, 100%인 것은 통과).
+- **[2026-10-18]** dance2가 두 로봇 모두 0% → **100%**. 원인은 Reference가 사람·G1보다 큰 점프를 요구한 것(골반 최고 +0.40 m vs 사람 +0.33, G1 +0.30; 0.3초 이상 체공 7~8회 vs G1 1회)으로, 제가 GMR 위에 얹은 골반 가중치와 평활 접지 보정이 점프를 부풀렸습니다. GMR 논문대로 되돌리고(pelvis 위치 100, 프레임별 접지, 다리 스케일 0.90) 접촉 게이팅·몸통 회전 가중치·팔 속도 한도만 더한 [Retargeting v4](docs/igris.md#retargeting-v4--점프를-사람-크기로-dance2-0--100)(IGRIS-C)와 v1(K1)입니다.
+- **[2026-10-17]** 몸통 허우적거림(IK가 팔 목표에 못 닿으면 몸통을 돌리는 것)을 잡은 Reference로 dance2를 다시 학습했지만 두 로봇 모두 0%. 허우적거림은 완주율의 원인이 아니었습니다. 학습된 Policy의 토크 로그로 넘어지는 프레임(137.9초, 100 rollout 중 99개가 같은 프레임)을 찍어 점프 크기로 원인을 좁혔습니다.
+- **[2026-10-16]** 세 번째 로봇 ROBOTIS AI Sapiens K1을 GMR과 Isaac Lab에 등록했습니다(G1 비율 PD 게인, `Tracking-Flat-K1-v0`). 두 로봇의 Reference에서 몸통 허우적거림을 재는 검사(`ref_smoothness.py`)와 팔 방향 오차 검사(`ref_arm_error.py`)를 추가했습니다.
 - **[2026-10-10]** IGRIS-C 14클립 학습을 마쳤습니다(frame 0부터, 100 rollout). 걷기 9개와 aiming1은 Success Rate 95–100%로 G1과 동등하고, 나머지는 jumps1 74%, run2 72%, dance2 0%, obstacles3 0%입니다(G1 98–100%). obstacles3는 서 있는 시작 자세부터 고관절 토크가 한계를 넘고, jumps1 Reference는 점프 체공이 1.10초(사람 0.43초)입니다.
 - **[2026-10-09]** IGRIS-C 걷기 9개가 모두 끝났고 Success Rate 95–100%로 G1과 동등합니다. aiming1 100%(G1 100%), run2 72%(G1 99%)입니다. 막히는 구간을 G1·사람과 비교하면 IGRIS-C Reference가 발을 더 자주·오래 띄우고(run2), 기어가는 자세에서 바닥까지 내려가지 않습니다(obstacles3). 같은 조건(frame 0부터, 100 rollout)입니다.
 - **[2026-10-08]** [IGRIS-C 14클립 학습](docs/igris.md) 진행 중: G1과 같은 조건(frame 0부터, 100 rollout, Domain Randomization 끔)에서 걷기 8개 모두 Success Rate 95–100%로 G1과 동등합니다. dance2는 0%로, 점프 꼭대기에서 Policy가 점프를 시도하지 않습니다(원인 미확인). Retargeting v3에서 IK 뒤집힘(52 → 4)과 발 관통을 고쳤습니다.
@@ -118,6 +122,7 @@ rollout만 평균낸 값입니다. 지표 정의는 [GMR 논문](https://arxiv.o
 |---|---|---|---|---|---|---|
 | Unitree G1 | 29 | 1.32m / 35kg | ✅ LAFAN1 77개 | ✅ 14개 | ✅ 14 → 1 | ✅ MuJoCo |
 | [IGRIS-C](https://github.com/robrosinc/igris_c_description_public) | 31 | 1.5m / 58kg | ✅ 14개 | ✅ 14개 | — | — |
+| [ROBOTIS AI Sapiens K1](https://github.com/ROBOTIS-GIT/ai_sapiens) | 23 | G1과 비슷 | ✅ 4개 (v1) | 🔄 4개 중 2개 | — | — |
 
 ![igris_transfer](docs/igris_transfer.png)
 
@@ -219,6 +224,8 @@ data ->     데이터 심볼릭 링크 (gitignored)
 | [docs/sim2sim.md](docs/sim2sim.md) | MuJoCo 전이, 두 가지 합격 기준, 전이 손실 |
 | [docs/robustness.md](docs/robustness.md) | 모델 불일치 민감도, 실시간 Inference 루프 |
 | [docs/igris.md](docs/igris.md) | 두 번째 로봇 Retargeting과 관절 대응 |
+| [docs/k1.md](docs/k1.md) | 세 번째 로봇 K1 등록과 결과 |
+| [docs/new-robot.md](docs/new-robot.md) | 새 로봇 추가 절차: IK 설정 자동 생성, 학습 전 Reference 채점표 |
 | [docs/kobe.md](docs/kobe.md) | 배경, LAFAN1 밖의 동작 |
 | [docs/reward_ablation.md](docs/reward_ablation.md) | Tracking Reward 세 묶음을 하나씩 뺀 비교 |
 | [docs/data.md](docs/data.md) | 데이터 출처와 선택 이유 |
@@ -236,7 +243,9 @@ data ->     데이터 심볼릭 링크 (gitignored)
 - [ ] 학습에 지연 넣기 — Domain Randomization에 지연, 또는 명령 이력을 observation에
 - [ ] 학습 모션 14 → 60개, 나머지를 held-out으로
 - [ ] DAgger rollout에 교란 넣기 (복구력)
-- [ ] Retargeting 선별 기준 다시 잡기 — 지면 관통, 발 미끄럼, 관절속도 위반
+- [x] Retargeting 선별 기준 다시 잡기 — G1·사람 대비 채점표(`scripts/newrobot/scorecard.py`)
+- [x] 세 번째 로봇 K1 — 등록, Retargeting v1, dance2 100%
+- [x] 새 로봇 추가 절차 — MJCF에서 IK 설정 자동 생성, 학습 전 채점
 - [ ] 로컬 경로를 떼어 내 복제해 돌릴 수 있게
 - [ ] 실제 로봇
 
