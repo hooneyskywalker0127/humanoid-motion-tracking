@@ -1,6 +1,6 @@
 # 새 휴머노이드 추가 절차
 
-[← README](../README.md)
+[← README](../README.md) · [English](new-robot.en.md)
 
 GMR 에 등록되지 않은 휴머노이드를 이 파이프라인에 올리는 순서입니다. IGRIS-C(ROBROS)와 ROBOTIS AI Sapiens K1 을
 손으로 올리며 겪은 것을 스크립트 두 개와 점검표로 묶었습니다. 핵심은 **학습 전에 레퍼런스를 G1 과 같은 잣대로 채점**해서,

@@ -245,8 +245,8 @@ Two things I had added on top of GMR inflated them: the stage-2 pelvis weight of
 
 v4 reverts to the GMR paper (pelvis position weight 100, per-frame grounding, constant ground_height 0.03, leg and pelvis scale 1.01 → 0.90) and adds
 only contact gating 100/20 (human foot within 8 cm), trunk rotation 200 and an arm velocity limit of 8 rad/s. dance2 100% (E_mpbpe 48 mm, G1 45),
-obstacles3 81%¹ (v3 0%). The same recipe on the K1 (trunk 100, arm 10) is in [docs/k1.md](k1.md); the generic procedure distilled from this is
-[docs/new-robot.md](new-robot.md), whose scorecard marks E31 "fail (air +0.09, apex +0.07)" and v4 "pass".
+obstacles3 81%¹ (v3 0%). The same recipe on the K1 (trunk 100, arm 10) is in [docs/k1.en.md](k1.en.md); the generic procedure distilled from this is
+[docs/new-robot.en.md](new-robot.en.md), whose scorecard marks E31 "fail (air +0.09, apex +0.07)" and v4 "pass".
 
 walk1_subject2 was OOM-killed at iteration 27,441 and resumed from model_27000 to 30,000 (resuming resets only the adaptive sampler state). walk1_subject5 was resumed from 15,000 after a reboot.
 

@@ -24,7 +24,7 @@ tracking) end to end.
 
 ## News
 
-- **[2026-10-19]** Third robot, the [ROBOTIS AI Sapiens K1](docs/k1.md), and obstacles3 on both: K1 94% (G1 98%), IGRIS-C 81% (v3 0%). The remaining 19% on IGRIS-C is outside its 131° knee range (the human demand exceeds it in 4.1% of frames), so the crawl is kinematically infeasible and reported with a footnote. What it took to add two robots is now a [new-robot procedure](docs/new-robot.md): a GMR IK config generated from one MJCF (reproduces the hand-made tables exactly) and a pre-training reference scorecard (the references that scored 0% on dance2 fail it, the 100% ones pass).
+- **[2026-10-19]** Third robot, the [ROBOTIS AI Sapiens K1](docs/k1.en.md), and obstacles3 on both: K1 94% (G1 98%), IGRIS-C 81% (v3 0%). The remaining 19% on IGRIS-C is outside its 131° knee range (the human demand exceeds it in 4.1% of frames), so the crawl is kinematically infeasible and reported with a footnote. What it took to add two robots is now a [new-robot procedure](docs/new-robot.en.md): a GMR IK config generated from one MJCF (reproduces the hand-made tables exactly) and a pre-training reference scorecard (the references that scored 0% on dance2 fail it, the 100% ones pass).
 - **[2026-10-18]** dance2 went from 0% to **100%** on both robots. The reference had demanded bigger jumps than the human or the G1 (pelvis apex +0.40 m vs human +0.33, G1 +0.30; seven to eight flight phases ≥0.3 s vs one for the G1); the pelvis weight and the smoothed ground correction I had added on top of GMR inflated them. [Retargeting v4](docs/igris.en.md#retargeting-v4--human-sized-jumps-dance2-0--100) (IGRIS-C) and v1 (K1) revert to the GMR paper (pelvis position 100, per-frame grounding, leg scale 0.90) and add only contact gating, a trunk rotation weight and an arm velocity limit.
 - **[2026-10-17]** Retraining dance2 with references that no longer flail the trunk (the IK rotating the torso when an arm target is out of reach) still gave 0% on both robots, so flailing was not the cause. The trained policies' torque logs pinned the fall to one frame (137.9 s, 99 of 100 rollouts), which narrowed the cause to jump size.
 - **[2026-10-16]** Registered a third robot, the ROBOTIS AI Sapiens K1, in GMR and Isaac Lab (G1-ratio PD gains, `Tracking-Flat-K1-v0`). Added two reference checks: trunk flailing (`ref_smoothness.py`) and arm direction error (`ref_arm_error.py`).
@@ -226,8 +226,8 @@ data ->     dataset symlink (gitignored)
 | [docs/sim2sim.en.md](docs/sim2sim.en.md) | MuJoCo transfer, the two pass criteria, transfer loss |
 | [docs/robustness.en.md](docs/robustness.en.md) | model-mismatch sweep, real-time inference loop |
 | [docs/igris.en.md](docs/igris.en.md) | second-robot retargeting and joint mapping |
-| [docs/k1.md](docs/k1.md) | Third robot K1: registration and results (Korean) |
-| [docs/new-robot.md](docs/new-robot.md) | Adding a new humanoid: IK config generator, pre-training reference scorecard (Korean) |
+| [docs/k1.en.md](docs/k1.en.md) | Third robot K1: registration and results |
+| [docs/new-robot.en.md](docs/new-robot.en.md) | Adding a new humanoid: IK config generator, pre-training reference scorecard |
 | [docs/kobe.en.md](docs/kobe.en.md) | background, a motion from outside LAFAN1 |
 | [docs/reward_ablation.en.md](docs/reward_ablation.en.md) | removing each group of tracking rewards in turn |
 | [docs/data.en.md](docs/data.en.md) | data sources and why they were chosen |
